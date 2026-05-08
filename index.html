@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Gastos Compartidos</title>
+  <style>
+    :root {
+      --bg: #0f0f13;
+      --surface: #1a1a22;
+      --surface2: #22222e;
+      --border: rgba(255,255,255,0.07);
+      --accent: #c084fc;
+      --accent2: #818cf8;
+      --text: #f0f0f5;
+      --text-muted: #6b6b80;
+      --text-secondary: #9999b0;
+      --success: #34d399;
+      --error: #f87171;
+      --radius: 14px;
+      --radius-sm: 9px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      font-family: -apple-system, 'SF Pro Text', BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100dvh;
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: rgba(15,15,19,0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 20px 14px;
+    }
+
+    .header-inner { display: flex; align-items: center; gap: 10px; }
+
+    .header-icon {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; flex-shrink: 0;
+    }
+
+    .header h1 { font-size: 17px; font-weight: 600; letter-spacing: -0.3px; }
+    .header p  { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
+
+    .form {
+      padding: 20px 16px;
+      display: flex; flex-direction: column; gap: 24px;
+      max-width: 480px; margin: 0 auto;
+    }
+
+    .section-label {
+      font-size: 11px; font-weight: 600; letter-spacing: 0.6px;
+      text-transform: uppercase; color: var(--text-muted);
+      margin-bottom: 8px; padding-left: 4px;
+    }
+
+    .card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    .card-row {
+      display: flex; align-items: center;
+      padding: 0 16px; min-height: 52px;
+      border-bottom: 1px solid var(--border);
+      gap: 12px; position: relative;
+    }
+
+    .card-row:last-child { border-bottom: none; }
+    .card-row:focus-within { background: rgba(192,132,252,0.04); }
+
+    .row-label {
+      font-size: 15px; color: var(--text);
+      flex-shrink: 0; min-width: 100px;
+    }
+
+    input, select, textarea {
+      background: transparent; border: none; outline: none;
+      color: var(--text); font-size: 15px; font-family: inherit;
+      flex: 1; text-align: right;
+      -webkit-appearance: none; appearance: none;
+    }
+
+    input::placeholder { color: var(--text-muted); }
+
+    select option { background: #1a1a22; color: var(--text); }
+
+    .select-wrapper {
+      flex: 1; display: flex; align-items: center;
+      justify-content: flex-end; gap: 4px;
+    }
+
+    .select-wrapper select { flex: 1; cursor: pointer; color: var(--text-secondary); }
+    .select-wrapper select.has-value { color: var(--text); }
+
+    .chevron { color: var(--text-muted); font-size: 11px; flex-shrink: 0; }
+
+    /* Monto — $ siempre pegado al número */
+    .monto-wrapper {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
+    .monto-inner {
+      display: flex;
+      align-items: center;
+      gap: 0;
+    }
+
+    .currency-tag {
+      font-size: 22px; font-weight: 300;
+      color: var(--text-muted); flex-shrink: 0;
+      letter-spacing: -0.5px; line-height: 1;
+      display: none;
+    }
+
+    .monto-input {
+      font-size: 22px; font-weight: 300;
+      letter-spacing: -0.5px;
+      flex: none;
+      width: auto;
+      min-width: 2ch;
+      max-width: 180px;
+      text-align: left;
+    }
+
+    /* Cuando está vacío mostramos placeholder centrado a la derecha */
+    .monto-input:placeholder-shown {
+      min-width: 60px;
+      text-align: right;
+    }
+
+    /* Segment */
+    .segment {
+      display: flex; background: var(--surface2);
+      border-radius: var(--radius-sm); padding: 3px; gap: 2px;
+    }
+
+    .segment-btn {
+      flex: 1; padding: 7px 8px; border: none; border-radius: 7px;
+      background: transparent; color: var(--text-muted);
+      font-size: 13px; font-weight: 500; font-family: inherit;
+      cursor: pointer; transition: all 0.18s ease;
+      text-align: center; white-space: nowrap;
+    }
+
+    .segment-btn.active {
+      background: var(--surface); color: var(--text);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+    }
+
+    /* "Los 2" recibe más flex para no romper en 2 líneas */
+    .segment-btn.wide { flex: 1.5; }
+
+    .cuotas-row { display: none; }
+    .cuotas-row.visible { display: flex; }
+
+    .stepper { display: flex; align-items: center; gap: 12px; margin-left: auto; }
+
+    .stepper-btn {
+      width: 28px; height: 28px; border-radius: 50%; border: none;
+      background: var(--surface2); color: var(--text);
+      font-size: 18px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s; flex-shrink: 0;
+    }
+
+    .stepper-btn:active  { background: var(--accent); }
+    .stepper-btn:disabled { opacity: 0.3; cursor: default; }
+
+    .stepper-value {
+      font-size: 17px; font-weight: 500;
+      min-width: 24px; text-align: center; color: var(--text);
+    }
+
+    /* Resumen row */
+    .resumen-row { gap: 10px; }
+
+    .cal-icon { font-size: 17px; flex-shrink: 0; opacity: 0.65; }
+
+    .resumen-selects {
+      display: flex; align-items: center;
+      flex: 1; justify-content: flex-end;
+    }
+
+    .resumen-selects select { color: var(--text); cursor: pointer; padding: 0 2px; }
+
+    .date-sep { color: var(--text-muted); font-size: 15px; padding: 0 3px; flex-shrink: 0; }
+
+    .corresponde-note {
+      font-size: 11px; color: var(--text-muted);
+      padding: 8px 16px 10px; line-height: 1.4;
+    }
+
+    .submit-btn {
+      width: 100%; padding: 16px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff; font-size: 16px; font-weight: 600;
+      font-family: inherit; border: none; border-radius: var(--radius);
+      cursor: pointer; transition: opacity 0.2s, transform 0.1s;
+      letter-spacing: -0.2px;
+    }
+
+    .submit-btn:active   { opacity: 0.85; transform: scale(0.98); }
+    .submit-btn:disabled { opacity: 0.4; cursor: default; transform: none; }
+
+    .toast {
+      position: fixed;
+      bottom: calc(24px + env(safe-area-inset-bottom));
+      left: 50%; transform: translateX(-50%) translateY(80px);
+      background: var(--surface2); border: 1px solid var(--border);
+      color: var(--text); padding: 12px 20px; border-radius: 24px;
+      font-size: 14px; font-weight: 500; white-space: nowrap;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+      transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+      z-index: 100; display: flex; align-items: center; gap: 8px;
+    }
+
+    .toast.show    { transform: translateX(-50%) translateY(0); }
+    .toast.success { border-color: rgba(52,211,153,0.3); }
+    .toast.error   { border-color: rgba(248,113,113,0.3); }
+
+    .spinner {
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff; border-radius: 50%;
+      animation: spin 0.6s linear infinite; flex-shrink: 0;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .section { animation: fadeUp 0.3s ease both; }
+    .section:nth-child(1) { animation-delay: 0.05s; }
+    .section:nth-child(2) { animation-delay: 0.10s; }
+    .section:nth-child(3) { animation-delay: 0.15s; }
+    .section:nth-child(4) { animation-delay: 0.20s; }
+    .section:nth-child(5) { animation-delay: 0.25s; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @supports (-webkit-touch-callout: none) {
+      input, select, textarea { font-size: 16px !important; }
+      .monto-input            { font-size: 22px !important; }
+      .currency-tag           { font-size: 22px !important; }
+      .segment-btn            { font-size: 13px !important; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <div class="header-icon">🏠</div>
+    <div>
+      <h1>Gastos Compartidos</h1>
+      <p>Eze &amp; Iru</p>
+    </div>
+  </div>
+</div>
+
+<form class="form" id="form" onsubmit="return false;">
+
+  <!-- GASTO -->
+  <div class="section">
+    <div class="section-label">Gasto</div>
+    <div class="card">
+
+      <div class="card-row">
+        <span class="row-label">Descripción</span>
+        <input type="text" id="descripcion" placeholder="Ej: Supermercado" autocomplete="off" autocorrect="off" />
+      </div>
+
+      <div class="card-row">
+        <span class="row-label">Categoría</span>
+        <div class="select-wrapper">
+          <select id="categoria" onchange="this.classList.toggle('has-value', this.value !== '')">
+            <option value="">Seleccionar</option>
+            <option>Comida</option>
+            <option>Hogar</option>
+            <option>Salidas</option>
+            <option>Gustos</option>
+            <option>Traslado/auto</option>
+            <option>Otro</option>
+          </select>
+          <span class="chevron">›</span>
+        </div>
+      </div>
+
+      <div class="card-row">
+        <span class="row-label">Monto</span>
+        <div class="monto-wrapper">
+          <div class="monto-inner">
+            <span class="currency-tag" id="currency-tag">$</span>
+            <input
+              class="monto-input"
+              type="text"
+              id="monto"
+              inputmode="numeric"
+              placeholder="$0"
+              autocomplete="off"
+              oninput="formatMonto(this)"
+            />
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- PAGO -->
+  <div class="section">
+    <div class="section-label">Pago</div>
+    <div class="card">
+
+      <div class="card-row">
+        <span class="row-label">Medio de pago</span>
+        <div class="segment" id="seg-medio">
+          <button type="button" class="segment-btn" data-value="Tarjeta de crédito" onclick="selectMedio('Tarjeta de crédito',this)">Tarjeta</button>
+          <button type="button" class="segment-btn" data-value="Contado" onclick="selectMedio('Contado',this)">Contado</button>
+        </div>
+      </div>
+
+      <div class="card-row cuotas-row" id="cuotas-row">
+        <span class="row-label">Cuotas</span>
+        <div class="stepper">
+          <button type="button" class="stepper-btn" id="cuotas-minus" onclick="stepCuotas(-1)" disabled>−</button>
+          <span class="stepper-value" id="cuotas-display">1</span>
+          <button type="button" class="stepper-btn" id="cuotas-plus" onclick="stepCuotas(1)">+</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- RESUMEN -->
+  <div class="section">
+    <div class="section-label">Resumen</div>
+    <div class="card">
+      <div class="card-row resumen-row">
+        <span class="cal-icon">📅</span>
+        <div class="resumen-selects">
+          <select id="mes-resumen">
+            <option value="1">Enero</option>
+            <option value="2">Febrero</option>
+            <option value="3">Marzo</option>
+            <option value="4">Abril</option>
+            <option value="5">Mayo</option>
+            <option value="6">Junio</option>
+            <option value="7">Julio</option>
+            <option value="8">Agosto</option>
+            <option value="9">Septiembre</option>
+            <option value="10">Octubre</option>
+            <option value="11">Noviembre</option>
+            <option value="12">Diciembre</option>
+          </select>
+          <span class="date-sep">/</span>
+          <select id="anio-resumen"></select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PERSONAS -->
+  <div class="section">
+    <div class="section-label">Personas</div>
+    <div class="card">
+
+      <div class="card-row">
+        <span class="row-label">Quién pagó</span>
+        <div class="segment" id="seg-quien">
+          <button type="button" class="segment-btn" data-value="Eze" onclick="selectSegment('quien','Eze',this)">Eze</button>
+          <button type="button" class="segment-btn" data-value="Iru" onclick="selectSegment('quien','Iru',this)">Iru</button>
+        </div>
+      </div>
+
+      <div class="card-row">
+        <span class="row-label">Corresponde a</span>
+        <div class="segment" id="seg-corresponde">
+          <button type="button" class="segment-btn wide" data-value="Los 2" onclick="selectSegment('corresponde','Los 2',this)">Los 2</button>
+          <button type="button" class="segment-btn" data-value="Eze" onclick="selectSegment('corresponde','Eze',this)">Eze</button>
+          <button type="button" class="segment-btn" data-value="Iru" onclick="selectSegment('corresponde','Iru',this)">Iru</button>
+        </div>
+      </div>
+
+      <div class="corresponde-note" id="corresponde-note">El gasto se divide 50/50.</div>
+
+    </div>
+  </div>
+
+  <!-- SUBMIT -->
+  <div class="section">
+    <button type="button" class="submit-btn" id="submit-btn" onclick="submitForm()">
+      Registrar gasto
+    </button>
+  </div>
+
+</form>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxadLX8XzQle6EKvEwtPfBvxB7IRjQSmYkB6zWlH-BKhzTSw53Yqit7gEh_kGelLQM/exec';
+
+  const state = {
+    quien: null,
+    corresponde: 'Los 2',
+    medio: 'Tarjeta de crédito',
+    cuotas: 1,
+  };
+
+  function init() {
+    const hoy = new Date();
+
+    // Poblar años
+    const anioSelect = document.getElementById('anio-resumen');
+    const anioActual = hoy.getFullYear();
+    for (let y = anioActual - 1; y <= 2030; y++) {
+      const opt = document.createElement('option');
+      opt.value = y; opt.textContent = y;
+      if (y === anioActual) opt.selected = true;
+      anioSelect.appendChild(opt);
+    }
+
+    // Mes actual
+    document.getElementById('mes-resumen').value = hoy.getMonth() + 1;
+
+    // Preseleccionar "Los 2"
+    document.querySelector('#seg-corresponde [data-value="Los 2"]').classList.add('active');
+
+    // Preseleccionar Tarjeta
+    document.querySelector('#seg-medio [data-value="Tarjeta de crédito"]').classList.add('active');
+    document.getElementById('cuotas-row').classList.add('visible');
+
+    // Precargar usuario por ?usuario=eze|iru
+    const params = new URLSearchParams(window.location.search);
+    const usuario = params.get('usuario');
+    if (usuario) {
+      const norm = usuario.charAt(0).toUpperCase() + usuario.slice(1).toLowerCase();
+      const btn  = document.querySelector(`#seg-quien [data-value="${norm}"]`);
+      if (btn) selectSegment('quien', norm, btn);
+    }
+  }
+
+  function selectSegment(key, value, btn) {
+    state[key] = value;
+    const segId = key === 'quien' ? 'seg-quien' : 'seg-corresponde';
+    document.querySelectorAll(`#${segId} .segment-btn`).forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    updateCorrespondeNote();
+  }
+
+  function selectMedio(value, btn) {
+    state.medio = value;
+    document.querySelectorAll('#seg-medio .segment-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const row = document.getElementById('cuotas-row');
+    if (value === 'Tarjeta de crédito') {
+      row.classList.add('visible');
+      state.cuotas = 1;
+      updateCuotasDisplay();
+    } else {
+      row.classList.remove('visible');
+      state.cuotas = 1;
+    }
+  }
+
+  function updateCorrespondeNote() {
+    const note = document.getElementById('corresponde-note');
+    const { quien, corresponde } = state;
+    if (!quien) {
+      note.textContent = corresponde === 'Los 2'
+        ? 'El gasto se divide 50/50.'
+        : `El gasto corresponde al 100% a ${corresponde}.`;
+      return;
+    }
+    if (corresponde === 'Los 2') {
+      note.textContent = `${quien} pagó. El gasto se divide 50/50.`;
+    } else if (corresponde !== quien) {
+      note.textContent = `${quien} pagó, pero corresponde a ${corresponde}. ${corresponde} le debe el 100% a ${quien}.`;
+    } else {
+      note.textContent = `${quien} pagó un gasto que le corresponde íntegramente.`;
+    }
+  }
+
+  function stepCuotas(delta) {
+    state.cuotas = Math.max(1, Math.min(48, state.cuotas + delta));
+    updateCuotasDisplay();
+  }
+
+  function updateCuotasDisplay() {
+    document.getElementById('cuotas-display').textContent = state.cuotas;
+    document.getElementById('cuotas-minus').disabled = state.cuotas <= 1;
+  }
+
+  function formatMonto(input) {
+    const raw = input.value.replace(/\./g, '').replace(/[^0-9]/g, '');
+    const tag  = document.getElementById('currency-tag');
+    if (!raw) {
+      input.value = '';
+      input.placeholder = '$0';
+      tag.style.display = 'none';
+      return;
+    }
+    tag.style.display = 'inline';
+    input.placeholder = '';
+    input.value = parseInt(raw, 10).toLocaleString('es-AR').replace(/,/g, '.');
+  }
+
+  function getRawMonto() {
+    const val = document.getElementById('monto').value;
+    return parseFloat(val.replace(/\./g, '').replace(/,/g, '.')) || 0;
+  }
+
+  async function submitForm() {
+    const descripcion = document.getElementById('descripcion').value.trim();
+    const categoria   = document.getElementById('categoria').value;
+    const monto       = getRawMonto();
+
+    if (!state.quien)         return showToast('⚠️ Seleccioná quién pagó', 'error');
+    if (!state.corresponde)   return showToast('⚠️ Seleccioná a quién corresponde', 'error');
+    if (!descripcion)         return showToast('⚠️ Ingresá una descripción', 'error');
+    if (!categoria)           return showToast('⚠️ Seleccioná una categoría', 'error');
+    if (!monto || monto <= 0) return showToast('⚠️ Ingresá un monto válido', 'error');
+
+    const mesResumen  = parseInt(document.getElementById('mes-resumen').value);
+    const anioResumen = parseInt(document.getElementById('anio-resumen').value);
+    const mesesNombre = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+                         'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+    const esCuotas = state.medio === 'Tarjeta de crédito' && state.cuotas > 1;
+    const filas = [];
+
+    for (let i = 0; i < (esCuotas ? state.cuotas : 1); i++) {
+      const mesIdx    = (mesResumen - 1 + i) % 12;
+      const anioExtra = anioResumen + Math.floor((mesResumen - 1 + i) / 12);
+      filas.push({
+        quienPago:        state.quien,
+        correspondea:     state.corresponde,
+        descripcion,
+        categoria,
+        monto,
+        medioPago:        state.medio,
+        esCuotas:         esCuotas ? 'Sí' : 'No',
+        numeroCuota:      esCuotas ? i + 1 : 1,
+        totalCuotas:      esCuotas ? state.cuotas : 1,
+        montoTotal:       monto,
+        montoCuota:       esCuotas ? monto / state.cuotas : monto,
+        mesResumen:       mesesNombre[mesIdx],
+        mesResumenNumero: mesIdx + 1,
+        anioResumen:      anioExtra,
+      });
+    }
+
+    const btn = document.getElementById('submit-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner" style="margin:0 auto;"></div>';
+
+    try {
+      const resp = await fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({ filas }),
+      });
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      showToast('✓ Gasto registrado', 'success');
+      resetForm();
+    } catch (err) {
+      console.error(err);
+      showToast('Error al enviar. Revisá la conexión.', 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Registrar gasto';
+    }
+  }
+
+  function resetForm() {
+    document.getElementById('descripcion').value = '';
+    document.getElementById('categoria').value = '';
+    document.getElementById('categoria').classList.remove('has-value');
+    document.getElementById('monto').value = '';
+    document.getElementById('monto').placeholder = '$0';
+    document.getElementById('currency-tag').style.display = 'none';
+
+    state.corresponde = 'Los 2';
+    document.querySelectorAll('#seg-corresponde .segment-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector('#seg-corresponde [data-value="Los 2"]').classList.add('active');
+
+    state.medio = 'Tarjeta de crédito';
+    state.cuotas = 1;
+    document.querySelectorAll('#seg-medio .segment-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector('#seg-medio [data-value="Tarjeta de crédito"]').classList.add('active');
+    document.getElementById('cuotas-row').classList.add('visible');
+    updateCuotasDisplay();
+    updateCorrespondeNote();
+
+    const hoy = new Date();
+    document.getElementById('mes-resumen').value = hoy.getMonth() + 1;
+    document.getElementById('anio-resumen').value = hoy.getFullYear();
+  }
+
+  let toastTimer;
+  function showToast(msg, type = '') {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = 'toast show ' + type;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
+  }
+
+  init();
+</script>
+</body>
+</html>
