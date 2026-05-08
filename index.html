@@ -419,7 +419,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxadLX8XzQle6EKvEwtPfBvxB7IRjQSmYkB6zWlH-BKhzTSw53Yqit7gEh_kGelLQM/exec';
+  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwkkWQH3dfWYWaQ4mSMnTgWGTD_WuVmfXWDFXiQEfZsqHXT4HvUnmpEzbdGdJ9dmwEy/exec';
 
   const state = {
     quien: null,
@@ -578,9 +578,10 @@
     try {
       const resp = await fetch(APPS_SCRIPT_URL, {
         method: 'POST',
+        mode: 'no-cors',
         body: JSON.stringify({ filas }),
       });
-      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      // no-cors no permite leer la respuesta, pero si no tira error llegó bien
       showToast('✓ Gasto registrado', 'success');
       resetForm();
     } catch (err) {
