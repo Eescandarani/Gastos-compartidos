@@ -126,7 +126,7 @@
 
     .currency-tag {
       font-size: 22px; font-weight: 300;
-      color: var(--text-muted); flex-shrink: 0;
+      color: var(--text); flex-shrink: 0;
       letter-spacing: -0.5px; line-height: 1;
       display: none;
     }
@@ -219,6 +219,26 @@
     }
 
     .submit-btn:active   { opacity: 0.85; transform: scale(0.98); }
+    .dashboard-btn {
+      display: block;
+      width: 100%;
+      padding: 14px;
+      background: transparent;
+      color: var(--text);
+      font-size: 15px;
+      font-weight: 500;
+      font-family: inherit;
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+      margin-top: 10px;
+      transition: color 0.2s;
+    }
+
+    .dashboard-btn:active { color: var(--accent); }
+
     .submit-btn:disabled { opacity: 0.4; cursor: default; transform: none; }
 
     .toast {
@@ -413,6 +433,9 @@
     <button type="button" class="submit-btn" id="submit-btn" onclick="submitForm()">
       Registrar gasto
     </button>
+    <a href="https://datastudio.google.com/reporting/d9d5502c-7d67-4954-a63a-8ad81a9175c3/page/PJfxF" target="_blank" class="dashboard-btn">
+      Tablero de gastos
+    </a>
   </div>
 
 </form>
