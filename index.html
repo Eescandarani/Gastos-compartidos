@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Gastos Compartidos</title>
+  <title>Nuevo gasto compartido</title>
   <style>
     :root {
       --bg: #0f0f13;
@@ -57,7 +57,7 @@
 
     .form {
       padding: 20px 16px;
-      display: flex; flex-direction: column; gap: 24px;
+      display: flex; flex-direction: column; gap: 12px;
       max-width: 480px; margin: 0 auto;
     }
 
@@ -284,7 +284,7 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 32px 16px 8px;
+      padding: 24px 16px 0px;
     }
 
     .hero-monto-inner {
@@ -317,6 +317,7 @@
       width: auto;
       min-width: 3ch;
       max-width: 280px;
+      line-height: 1;
       -webkit-appearance: none;
       appearance: none;
     }
@@ -330,6 +331,7 @@
       max-width: 480px;
       margin: 0 auto;
       padding: 0 16px;
+      margin-top: 0;
     }
 
     .descripcion-flotante input {
@@ -341,7 +343,8 @@
       font-size: 16px;
       font-family: inherit;
       text-align: center;
-      padding: 8px 0 16px;
+      padding: 0 0 24px;
+      margin-top: 0;
       -webkit-appearance: none;
       appearance: none;
     }
@@ -366,8 +369,7 @@
   <div class="header-inner">
     <div class="header-icon">🏠</div>
     <div>
-      <h1>Gastos Compartidos</h1>
-      <p>Eze &amp; Iru</p>
+      <h1>Nuevo gasto compartido</h1>
     </div>
   </div>
 </div>
@@ -397,13 +399,12 @@
 
   <!-- GASTO -->
   <div class="section">
-    <div class="section-label">Categoría</div>
     <div class="card">
 
       <div class="card-row">
         <div class="select-wrapper">
           <select id="categoria" onchange="this.classList.toggle('has-value', this.value !== '')">
-            <option value="">Seleccionar</option>
+            <option value="">Categoría</option>
             <option>Supermercado</option>
             <option>Comida</option>
             <option>Hogar</option>
@@ -419,9 +420,8 @@
     </div>
   </div>
 
-  <!-- PAGO -->
+  <!-- PAGO + RESUMEN -->
   <div class="section">
-    <div class="section-label">Medio de pago</div>
     <div class="card">
 
       <div class="card-row">
@@ -440,15 +440,7 @@
         </div>
       </div>
 
-    </div>
-  </div>
-
-  <!-- RESUMEN -->
-  <div class="section">
-    <div class="section-label">Resumen</div>
-    <div class="card">
       <div class="card-row resumen-row">
-        <span class="cal-icon">📅</span>
         <div class="resumen-selects">
           <select id="mes-resumen">
             <option value="1">Enero</option>
@@ -468,12 +460,12 @@
           <select id="anio-resumen"></select>
         </div>
       </div>
+
     </div>
   </div>
 
   <!-- PERSONAS -->
   <div class="section">
-    <div class="section-label">Personas</div>
     <div class="card">
 
       <div class="card-row">
