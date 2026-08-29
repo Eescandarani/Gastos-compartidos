@@ -886,6 +886,34 @@
     return parseFloat(val.replace(/\./g, '').replace(/,/g, '.')) || 0;
   }
 
+  // Envía las filas y confirma contra la respuesta del Apps Script.
+  // Usa text/plain para que sea una petición simple (sin preflight); el web app
+  // devuelve CORS, así que sí podemos leer si la escritura salió bien.
+  async function enviarFilas(filas) {
+    const resp = await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ filas }),
+    });
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const data = await resp.json();
+    if (!data.ok) throw new Error(data.error || 'El servidor rechazó el envío');
+    return data;
+  }
+
+  // El Apps Script escribe fila por fila y con muchas cuotas demora: a los 5s
+  // avisamos en vez de dejar el loader mudo
+  function avisoDemora() {
+    return setTimeout(() => {
+      const el = document.getElementById('toast');
+      if (el.classList.contains('show') && el.querySelector('.spinner')) {
+        el.lastElementChild.textContent = 'Esto puede tomar unos segundos más…';
+      } else {
+        showToast('Esto puede tomar unos segundos más…', '', true);
+      }
+    }, 5000);
+  }
+
   async function submitForm() {
     const descripcion = document.getElementById('descripcion').value.trim();
     const categoria   = document.getElementById('categoria').value;
@@ -930,19 +958,17 @@
     btn.disabled = true;
     btn.innerHTML = '<div class="spinner" style="margin:0 auto;"></div>';
 
+    const demora = avisoDemora();
+
     try {
-      const resp = await fetch(APPS_SCRIPT_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        body: JSON.stringify({ filas }),
-      });
-      // no-cors no permite leer la respuesta, pero si no tira error llegó bien
+      await enviarFilas(filas);
       showToast('✓ Gasto registrado', 'success');
-      resetForm();
+      resetForm();   // solo limpiamos si la escritura se confirmó
     } catch (err) {
       console.error(err);
-      showToast('Error al enviar. Revisá la conexión.', 'error');
+      showToast('No se pudo registrar. Los datos siguen cargados.', 'error');
     } finally {
+      clearTimeout(demora);
       btn.disabled = false;
       btn.textContent = 'Registrar gasto';
     }
@@ -1312,33 +1338,26 @@
     btn.disabled = true;
     showToast('Registrando gastos…', '', true);
 
-    // Con muchas cuotas el Apps Script escribe fila por fila y puede demorar:
-    // avisamos en vez de dejar el spinner mudo
-    const esperaLarga = setTimeout(() => {
-      const el = document.getElementById('toast');
-      if (el.querySelector('.spinner')) {
-        el.lastElementChild.textContent = 'Esto puede tomar unos segundos más…';
-      }
-    }, 5000);
+    const demora = avisoDemora();
 
     try {
-      await fetch(APPS_SCRIPT_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        body: JSON.stringify({ filas }),
-      });
+      await enviarFilas(filas);
       showToast(lista.length === 1
         ? '✓ Se registró el gasto'
         : `✓ Se registraron los ${lista.length} gastos`, 'success');
+      // La lista solo se vacía con la escritura confirmada; si falla, los
+      // gastos quedan cargados para reintentar sin volver a tipearlos
       masiva.items = [];
       masiva.menuOpenId = null;
       limpiarDraft();
       renderMasiva();
     } catch (err) {
       console.error(err);
-      showToast('Error al enviar. Revisá la conexión.', 'error');
+      showToast(lista.length === 1
+        ? 'No se pudo registrar. El gasto sigue cargado.'
+        : `No se pudo registrar. Los ${lista.length} gastos siguen cargados.`, 'error');
     } finally {
-      clearTimeout(esperaLarga);
+      clearTimeout(demora);
       btn.disabled = false;
       renderMasiva();
     }
