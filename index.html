@@ -1159,6 +1159,7 @@
     limpiarDraft(item);
     renderMasiva();
     document.getElementById('d-monto').focus();
+    return true;
   }
 
   function editarItem(id) {
@@ -1296,10 +1297,11 @@
   }
 
   async function registrarMasivo() {
-    // Si quedó un gasto a medio cargar en el formulario, lo confirmamos primero
+    // Si quedó un gasto a medio cargar en el formulario, lo confirmamos primero.
+    // Si no pasa la validación cortamos: el toast ya explica qué falta y así no
+    // se pierde lo que el usuario venía tipeando
     if (dGetMonto() > 0 || document.getElementById('d-descripcion').value.trim()) {
-      confirmarGasto();
-      if (dGetMonto() > 0) return; // la validación falló, el toast ya lo explica
+      if (!confirmarGasto()) return;
     }
 
     const lista = masiva.items;
