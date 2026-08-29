@@ -362,6 +362,113 @@
       color: var(--text-muted);
     }
 
+
+    /* ===== Carga masiva ===== */
+    .view { display: none; }
+    .view.active { display: block; }
+
+    .link-btn {
+      display: flex; align-items: center; justify-content: center; gap: 4px;
+      width: 100%; padding: 14px; margin-top: 10px;
+      background: transparent; border: none; border-radius: var(--radius);
+      color: var(--text); font-size: 15px; font-weight: 500; font-family: inherit;
+      cursor: pointer; transition: color 0.2s;
+    }
+
+    .link-btn .chevron { color: var(--accent); font-size: 16px; }
+    .link-btn:active { color: var(--accent); }
+
+    .back-btn {
+      width: 32px; height: 32px; flex-shrink: 0;
+      background: var(--surface2); border: none; border-radius: 8px;
+      color: var(--text); font-size: 20px; line-height: 1;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: background 0.15s; padding-bottom: 2px;
+    }
+
+    .back-btn:active { background: var(--accent); }
+
+    .card-title {
+      font-size: 13px; font-weight: 600; color: var(--text-secondary);
+      padding: 14px 16px 11px; border-bottom: 1px solid var(--border);
+    }
+
+    .item-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 11px 8px 11px 16px;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+    }
+
+    .item-main { flex: 1; min-width: 0; }
+
+    .item-desc {
+      font-size: 15px; color: var(--text);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    .item-meta,
+    .item-meta-ctx { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+    .item-monto { font-size: 15px; font-weight: 500; color: var(--text); flex-shrink: 0; }
+
+    .item-menu-btn {
+      width: 28px; height: 28px; flex-shrink: 0;
+      border: none; border-radius: 50%; background: transparent;
+      color: var(--text-muted); font-size: 18px; font-family: inherit;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+
+    .item-menu-btn:active { background: var(--surface2); }
+
+    .item-menu {
+      position: absolute; right: 12px; top: calc(100% - 12px); z-index: 30;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); overflow: hidden; min-width: 140px;
+      box-shadow: 0 8px 28px rgba(0,0,0,0.55);
+      animation: fadeUp 0.15s ease both;
+    }
+
+    .item-menu button {
+      display: block; width: 100%; padding: 11px 14px; text-align: left;
+      background: transparent; border: none; color: var(--text);
+      font-size: 14px; font-family: inherit; cursor: pointer;
+    }
+
+    .item-menu button + button { border-top: 1px solid var(--border); color: var(--error); }
+    .item-menu button:active { background: rgba(255,255,255,0.05); }
+
+    .total-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 13px 16px; border-top: 1px solid var(--border);
+      background: rgba(255,255,255,0.02);
+    }
+
+    .total-label { font-size: 13px; color: var(--text-muted); }
+    .total-value { font-size: 16px; font-weight: 600; color: var(--text); }
+
+    .secondary-btn {
+      width: 100%; padding: 14px;
+      background: var(--surface2); border: none;
+      border-top: 1px solid var(--border);
+      color: var(--accent); font-size: 15px; font-weight: 500;
+      font-family: inherit; cursor: pointer; transition: opacity 0.2s;
+    }
+
+    .secondary-btn:active { opacity: 0.7; }
+
+    .monto-cell {
+      flex: 1; display: flex; align-items: center;
+      justify-content: flex-end; gap: 0;
+    }
+
+    .monto-cell .currency-tag-d { font-size: 17px; color: var(--text); flex-shrink: 0; }
+
+    .monto-cell input {
+      flex: none; width: auto; min-width: 60px;
+      text-align: right; font-size: 17px;
+    }
+
     @supports (-webkit-touch-callout: none) {
       input, select, textarea { font-size: 16px !important; }
       .monto-input            { font-size: 22px !important; }
@@ -373,6 +480,9 @@
   </style>
 </head>
 <body>
+
+<!-- ============ VISTA INDIVIDUAL ============ -->
+<div class="view active" id="view-individual">
 
 <div class="header">
   <div class="header-inner">
@@ -504,12 +614,152 @@
     <button type="button" class="submit-btn" id="submit-btn" onclick="submitForm()">
       Registrar gasto
     </button>
+    <button type="button" class="link-btn" onclick="irMasiva()">
+      Carga masiva <span class="chevron">›</span>
+    </button>
     <a href="https://datastudio.google.com/reporting/d9d5502c-7d67-4954-a63a-8ad81a9175c3/page/PJfxF" target="_blank" class="dashboard-btn">
       Tablero de gastos
     </a>
   </div>
 
 </form>
+</div>
+
+<!-- ============ VISTA CARGA MASIVA ============ -->
+<div class="view" id="view-masiva">
+
+  <div class="header">
+    <div class="header-inner">
+      <button type="button" class="back-btn" onclick="irIndividual()">‹</button>
+      <div>
+        <h1>Carga masiva</h1>
+        <p id="masiva-contador">Ningún gasto cargado</p>
+      </div>
+    </div>
+  </div>
+
+  <form class="form" onsubmit="return false;">
+
+    <!-- GASTOS CARGADOS -->
+    <div class="section" id="lista-section" style="display:none;">
+      <div class="section-label">Gastos cargados</div>
+      <div class="card">
+        <div id="lista-items"></div>
+        <div class="total-row">
+          <span class="total-label">Total</span>
+          <span class="total-value" id="lista-total">$0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- FORMULARIO DEL GASTO -->
+    <div class="section">
+      <div class="card">
+
+        <div class="card-title" id="draft-titulo">Gasto 1</div>
+
+        <div class="card-row">
+          <span class="row-label">Monto</span>
+          <div class="monto-cell">
+            <span class="currency-tag-d" id="d-currency" style="display:none;">$</span>
+            <input type="text" id="d-monto" inputmode="numeric" placeholder="$0"
+                   autocomplete="off" oninput="formatMontoDraft(this)" />
+          </div>
+        </div>
+
+        <div class="card-row">
+          <span class="row-label">Descripción</span>
+          <input type="text" id="d-descripcion" placeholder="Ej. Verdulería" autocomplete="off" autocorrect="off" />
+        </div>
+
+        <div class="card-row">
+          <div class="select-wrapper">
+            <select id="d-categoria" onchange="this.classList.toggle('has-value', this.value !== '')">
+              <option value="">Categoría</option>
+              <option>Supermercado</option>
+              <option>Comida</option>
+              <option>Hogar</option>
+              <option>Salidas</option>
+              <option>Gustos</option>
+              <option>Traslado/auto</option>
+              <option>Otro</option>
+            </select>
+            <span class="chevron">›</span>
+          </div>
+        </div>
+
+        <div class="card-row">
+          <div class="segment" id="d-seg-medio">
+            <button type="button" class="segment-btn active" data-value="Tarjeta de crédito" onclick="dSelectMedio('Tarjeta de crédito',this)">Tarjeta</button>
+            <button type="button" class="segment-btn" data-value="Contado" onclick="dSelectMedio('Contado',this)">Contado</button>
+          </div>
+        </div>
+
+        <div class="card-row cuotas-row visible" id="d-cuotas-row">
+          <span class="row-label">Cuotas</span>
+          <div class="stepper">
+            <button type="button" class="stepper-btn" id="d-cuotas-minus" onclick="dStepCuotas(-1)" disabled>−</button>
+            <span class="stepper-value" id="d-cuotas-display">1</span>
+            <button type="button" class="stepper-btn" onclick="dStepCuotas(1)">+</button>
+          </div>
+        </div>
+
+        <div class="card-row resumen-row">
+          <span class="cal-icon">📅</span>
+          <div class="resumen-selects">
+            <select id="d-mes">
+              <option value="1">Enero</option>
+              <option value="2">Febrero</option>
+              <option value="3">Marzo</option>
+              <option value="4">Abril</option>
+              <option value="5">Mayo</option>
+              <option value="6">Junio</option>
+              <option value="7">Julio</option>
+              <option value="8">Agosto</option>
+              <option value="9">Septiembre</option>
+              <option value="10">Octubre</option>
+              <option value="11">Noviembre</option>
+              <option value="12">Diciembre</option>
+            </select>
+            <span class="date-sep">/</span>
+            <select id="d-anio"></select>
+          </div>
+        </div>
+
+        <div class="card-row">
+          <span class="row-label">Quién pagó</span>
+          <div class="segment" id="d-seg-quien">
+            <button type="button" class="segment-btn" data-value="Eze" onclick="dSelectSegment('quien','Eze',this)">Eze</button>
+            <button type="button" class="segment-btn" data-value="Iru" onclick="dSelectSegment('quien','Iru',this)">Iru</button>
+          </div>
+        </div>
+
+        <div class="card-row">
+          <span class="row-label">Corresponde a</span>
+          <div class="segment" id="d-seg-corresponde">
+            <button type="button" class="segment-btn wide active" data-value="Los 2" onclick="dSelectSegment('corresponde','Los 2',this)">Los 2</button>
+            <button type="button" class="segment-btn" data-value="Eze" onclick="dSelectSegment('corresponde','Eze',this)">Eze</button>
+            <button type="button" class="segment-btn" data-value="Iru" onclick="dSelectSegment('corresponde','Iru',this)">Iru</button>
+          </div>
+        </div>
+
+        <button type="button" class="secondary-btn" id="draft-btn" onclick="confirmarGasto()">+ Nuevo gasto</button>
+
+      </div>
+    </div>
+
+    <!-- CTAs -->
+    <div class="section">
+      <button type="button" class="submit-btn" id="masiva-submit" onclick="registrarMasivo()">
+        Registrar gastos
+      </button>
+      <a href="https://datastudio.google.com/reporting/d9d5502c-7d67-4954-a63a-8ad81a9175c3/page/PJfxF" target="_blank" class="dashboard-btn">
+        Tablero de gastos
+      </a>
+    </div>
+
+  </form>
+</div>
 
 <div class="toast" id="toast"></div>
 
@@ -717,15 +967,337 @@
   }
 
   let toastTimer;
-  function showToast(msg, type = '') {
+  function showToast(msg, type = '', loading = false) {
     const el = document.getElementById('toast');
-    el.textContent = msg;
+    el.innerHTML = (loading ? '<div class="spinner"></div>' : '') + '<span></span>';
+    el.lastElementChild.textContent = msg;
     el.className = 'toast show ' + type;
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
+    if (!loading) toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
   }
 
   init();
+
+  /* ============ CARGA MASIVA ============ */
+
+  const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+                 'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const MESES_CORTO = ['Ene','Feb','Mar','Abr','May','Jun',
+                       'Jul','Ago','Sep','Oct','Nov','Dic'];
+
+  const masiva = {
+    items: [],
+    nextId: 1,
+    editingId: null,
+    menuOpenId: null,
+    quien: null,
+    corresponde: 'Los 2',
+    medio: 'Tarjeta de crédito',
+    cuotas: 1,
+  };
+
+  function initMasiva() {
+    const hoy = new Date();
+    const anioSelect = document.getElementById('d-anio');
+    const anioActual = hoy.getFullYear();
+    for (let y = anioActual - 1; y <= 2030; y++) {
+      const opt = document.createElement('option');
+      opt.value = y; opt.textContent = y;
+      if (y === anioActual) opt.selected = true;
+      anioSelect.appendChild(opt);
+    }
+    document.getElementById('d-mes').value = hoy.getMonth() + 1;
+
+    // Cerrar el menú contextual al tocar fuera
+    document.addEventListener('click', (e) => {
+      if (masiva.menuOpenId === null) return;
+      if (e.target.closest('.item-menu') || e.target.closest('.item-menu-btn')) return;
+      masiva.menuOpenId = null;
+      renderMasiva();
+    });
+
+    renderMasiva();
+  }
+
+  function irMasiva() {
+    // El contexto arranca con lo que ya haya elegido en el form individual
+    if (!masiva.quien && state.quien) dSelectSegment('quien', state.quien,
+      document.querySelector(`#d-seg-quien [data-value="${state.quien}"]`));
+    document.getElementById('view-individual').classList.remove('active');
+    document.getElementById('view-masiva').classList.add('active');
+    window.scrollTo(0, 0);
+  }
+
+  function irIndividual() {
+    masiva.menuOpenId = null;
+    renderMasiva();
+    document.getElementById('view-masiva').classList.remove('active');
+    document.getElementById('view-individual').classList.add('active');
+    window.scrollTo(0, 0);
+  }
+
+  function dSelectSegment(key, value, btn) {
+    if (!btn) return;
+    masiva[key] = value;
+    const segId = key === 'quien' ? 'd-seg-quien' : 'd-seg-corresponde';
+    document.querySelectorAll(`#${segId} .segment-btn`).forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+
+  function dSelectMedio(value, btn) {
+    masiva.medio = value;
+    document.querySelectorAll('#d-seg-medio .segment-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const row = document.getElementById('d-cuotas-row');
+    masiva.cuotas = 1;
+    row.classList.toggle('visible', value === 'Tarjeta de crédito');
+    dUpdateCuotas();
+  }
+
+  function dStepCuotas(delta) {
+    masiva.cuotas = Math.max(1, Math.min(48, masiva.cuotas + delta));
+    dUpdateCuotas();
+  }
+
+  function dUpdateCuotas() {
+    document.getElementById('d-cuotas-display').textContent = masiva.cuotas;
+    document.getElementById('d-cuotas-minus').disabled = masiva.cuotas <= 1;
+  }
+
+  function formatMontoDraft(input) {
+    const raw = input.value.replace(/\./g, '').replace(/[^0-9]/g, '');
+    const tag = document.getElementById('d-currency');
+    if (!raw) {
+      input.value = '';
+      input.placeholder = '$0';
+      tag.style.display = 'none';
+      return;
+    }
+    tag.style.display = 'inline';
+    input.placeholder = '';
+    input.value = parseInt(raw, 10).toLocaleString('es-AR').replace(/,/g, '.');
+  }
+
+  function dGetMonto() {
+    const val = document.getElementById('d-monto').value;
+    return parseFloat(val.replace(/\./g, '').replace(/,/g, '.')) || 0;
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c =>
+      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  function limpiarDraft(ultimo) {
+    const ctx = ultimo || {};
+    document.getElementById('d-monto').value = '';
+    document.getElementById('d-monto').placeholder = '$0';
+    document.getElementById('d-currency').style.display = 'none';
+    document.getElementById('d-descripcion').value = '';
+    const cat = document.getElementById('d-categoria');
+    cat.value = ''; cat.classList.remove('has-value');
+
+    dSelectMedio('Tarjeta de crédito', document.querySelector('#d-seg-medio [data-value="Tarjeta de crédito"]'));
+
+    // El mes/año, quién pagó y corresponde a se precargan con el gasto anterior
+    if (ctx.mes)  document.getElementById('d-mes').value  = ctx.mes;
+    if (ctx.anio) document.getElementById('d-anio').value = ctx.anio;
+    if (ctx.quien) {
+      dSelectSegment('quien', ctx.quien, document.querySelector(`#d-seg-quien [data-value="${ctx.quien}"]`));
+    }
+    if (ctx.corresponde) {
+      dSelectSegment('corresponde', ctx.corresponde, document.querySelector(`#d-seg-corresponde [data-value="${ctx.corresponde}"]`));
+    }
+
+    masiva.editingId = null;
+  }
+
+  function confirmarGasto() {
+    const monto       = dGetMonto();
+    const descripcion = document.getElementById('d-descripcion').value.trim();
+    const categoria   = document.getElementById('d-categoria').value;
+
+    if (!monto || monto <= 0) return showToast('⚠️ Ingresá un monto válido', 'error');
+    if (!descripcion)         return showToast('⚠️ Ingresá una descripción', 'error');
+    if (!categoria)           return showToast('⚠️ Seleccioná una categoría', 'error');
+    if (!masiva.quien)        return showToast('⚠️ Seleccioná quién pagó', 'error');
+    if (!masiva.corresponde)  return showToast('⚠️ Seleccioná a quién corresponde', 'error');
+
+    const item = {
+      id: masiva.editingId ?? masiva.nextId++,
+      monto,
+      montoDisplay: document.getElementById('d-monto').value,
+      descripcion,
+      categoria,
+      medio: masiva.medio,
+      cuotas: masiva.medio === 'Tarjeta de crédito' ? masiva.cuotas : 1,
+      mes: document.getElementById('d-mes').value,
+      anio: document.getElementById('d-anio').value,
+      quien: masiva.quien,
+      corresponde: masiva.corresponde,
+    };
+
+    const existe = masiva.items.some(i => i.id === item.id);
+    masiva.items = existe
+      ? masiva.items.map(i => (i.id === item.id ? item : i))
+      : [...masiva.items, item];
+    masiva.menuOpenId = null;
+
+    limpiarDraft(item);
+    renderMasiva();
+    document.getElementById('d-monto').focus();
+  }
+
+  function editarItem(id) {
+    const it = masiva.items.find(i => i.id === id);
+    if (!it) return;
+    masiva.editingId = id;
+    masiva.menuOpenId = null;
+
+    document.getElementById('d-monto').value = it.montoDisplay;
+    document.getElementById('d-currency').style.display = it.montoDisplay ? 'inline' : 'none';
+    document.getElementById('d-monto').placeholder = it.montoDisplay ? '' : '$0';
+    document.getElementById('d-descripcion').value = it.descripcion;
+    const cat = document.getElementById('d-categoria');
+    cat.value = it.categoria;
+    cat.classList.toggle('has-value', it.categoria !== '');
+
+    dSelectMedio(it.medio, document.querySelector(`#d-seg-medio [data-value="${it.medio}"]`));
+    masiva.cuotas = it.cuotas;
+    dUpdateCuotas();
+
+    document.getElementById('d-mes').value  = it.mes;
+    document.getElementById('d-anio').value = it.anio;
+    dSelectSegment('quien', it.quien, document.querySelector(`#d-seg-quien [data-value="${it.quien}"]`));
+    dSelectSegment('corresponde', it.corresponde, document.querySelector(`#d-seg-corresponde [data-value="${it.corresponde}"]`));
+
+    renderMasiva();
+    document.getElementById('d-monto').focus();
+  }
+
+  function eliminarItem(id) {
+    masiva.items = masiva.items.filter(i => i.id !== id);
+    masiva.menuOpenId = null;
+    if (masiva.editingId === id) limpiarDraft();
+    renderMasiva();
+  }
+
+  function toggleMenuItem(id) {
+    masiva.menuOpenId = masiva.menuOpenId === id ? null : id;
+    renderMasiva();
+  }
+
+  function renderMasiva() {
+    const n = masiva.items.length;
+
+    document.getElementById('masiva-contador').textContent =
+      n === 0 ? 'Ningún gasto cargado' : n === 1 ? '1 gasto cargado' : `${n} gastos cargados`;
+
+    document.getElementById('lista-section').style.display = n ? 'block' : 'none';
+
+    const cont = document.getElementById('lista-items');
+    cont.innerHTML = masiva.items.map((it, idx) => {
+      const esCuotas = it.medio === 'Tarjeta de crédito' && it.cuotas > 1;
+      const meta = esCuotas
+        ? `${it.categoria} · ${it.cuotas} cuotas`
+        : `${it.categoria} · ${it.medio === 'Contado' ? 'Contado' : 'Tarjeta'}`;
+      const metaCtx = `${MESES_CORTO[parseInt(it.mes, 10) - 1]} ${it.anio} · Pagó ${it.quien} · ${it.corresponde}`;
+      const borde = idx === n - 1 ? 'border-bottom:none;' : '';
+      const menu = masiva.menuOpenId === it.id
+        ? `<div class="item-menu">
+             <button type="button" onclick="editarItem(${it.id})">Editar</button>
+             <button type="button" onclick="eliminarItem(${it.id})">Eliminar</button>
+           </div>`
+        : '';
+      return `
+        <div class="item-row" style="${borde}">
+          <div class="item-main">
+            <div class="item-desc">${escapeHtml(it.descripcion)}</div>
+            <div class="item-meta">${escapeHtml(meta)}</div>
+            <div class="item-meta-ctx">${escapeHtml(metaCtx)}</div>
+          </div>
+          <span class="item-monto">$${escapeHtml(it.montoDisplay)}</span>
+          <button type="button" class="item-menu-btn" onclick="toggleMenuItem(${it.id})">⋯</button>
+          ${menu}
+        </div>`;
+    }).join('');
+
+    const total = masiva.items.reduce((a, i) => a + i.monto, 0);
+    document.getElementById('lista-total').textContent =
+      '$' + total.toLocaleString('es-AR').replace(/,/g, '.');
+
+    document.getElementById('draft-titulo').textContent =
+      masiva.editingId ? 'Editar gasto' : `Gasto ${n + 1}`;
+    document.getElementById('draft-btn').textContent =
+      masiva.editingId ? 'Guardar cambios' : '+ Nuevo gasto';
+    document.getElementById('masiva-submit').textContent =
+      n > 1 ? `Registrar ${n} gastos` : 'Registrar gastos';
+  }
+
+  function filasDeItem(it) {
+    const mesResumen  = parseInt(it.mes, 10);
+    const anioResumen = parseInt(it.anio, 10);
+    const esCuotas = it.medio === 'Tarjeta de crédito' && it.cuotas > 1;
+    const filas = [];
+    for (let i = 0; i < (esCuotas ? it.cuotas : 1); i++) {
+      const mesIdx = (mesResumen - 1 + i) % 12;
+      filas.push({
+        quienPago:        it.quien,
+        correspondea:     it.corresponde,
+        descripcion:      it.descripcion,
+        categoria:        it.categoria,
+        monto:            it.monto,
+        medioPago:        it.medio,
+        esCuotas:         esCuotas ? 'Sí' : 'No',
+        numeroCuota:      esCuotas ? i + 1 : 1,
+        totalCuotas:      esCuotas ? it.cuotas : 1,
+        montoTotal:       it.monto,
+        montoCuota:       esCuotas ? it.monto / it.cuotas : it.monto,
+        mesResumen:       MESES[mesIdx],
+        mesResumenNumero: mesIdx + 1,
+        anioResumen:      anioResumen + Math.floor((mesResumen - 1 + i) / 12),
+      });
+    }
+    return filas;
+  }
+
+  async function registrarMasivo() {
+    // Si quedó un gasto a medio cargar en el formulario, lo confirmamos primero
+    if (dGetMonto() > 0 || document.getElementById('d-descripcion').value.trim()) {
+      confirmarGasto();
+      if (dGetMonto() > 0) return; // la validación falló, el toast ya lo explica
+    }
+
+    const lista = masiva.items;
+    if (!lista.length) return showToast('⚠️ Cargá al menos un gasto', 'error');
+
+    const filas = lista.flatMap(filasDeItem);
+    const btn = document.getElementById('masiva-submit');
+    btn.disabled = true;
+    showToast('Registrando gastos…', '', true);
+
+    try {
+      await fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        body: JSON.stringify({ filas }),
+      });
+      showToast(`✓ Se registraron los ${lista.length} gastos`, 'success');
+      masiva.items = [];
+      masiva.menuOpenId = null;
+      limpiarDraft();
+      renderMasiva();
+    } catch (err) {
+      console.error(err);
+      showToast('Error al enviar. Revisá la conexión.', 'error');
+    } finally {
+      btn.disabled = false;
+      renderMasiva();
+    }
+  }
+
+  initMasiva();
+
 </script>
 </body>
 </html>
