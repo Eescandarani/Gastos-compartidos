@@ -411,7 +411,7 @@
     .item-menu-btn:active { background: var(--surface2); }
 
     .item-menu {
-      position: absolute; right: 12px; top: calc(100% - 12px); z-index: 30;
+      position: fixed; z-index: 60;
       background: var(--surface2); border: 1px solid var(--border);
       border-radius: var(--radius-sm); overflow: hidden; min-width: 140px;
       box-shadow: 0 8px 28px rgba(0,0,0,0.55);
@@ -451,6 +451,7 @@
     .secondary-btn.standalone {
       display: flex; align-items: center; justify-content: center; gap: 5px;
       padding: 16px; margin-top: 10px;
+      background: var(--surface2); color: var(--text);
       border: 1px solid var(--border); border-radius: var(--radius);
       font-size: 16px; font-weight: 600; letter-spacing: -0.2px;
     }
@@ -765,6 +766,8 @@
   </form>
 </div>
 
+<div class="item-menu-layer" id="item-menu-layer"></div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -1020,6 +1023,12 @@
       renderMasiva();
     });
 
+    window.addEventListener('scroll', () => {
+      if (masiva.menuOpenId === null) return;
+      masiva.menuOpenId = null;
+      renderMasiva();
+    }, { passive: true });
+
     renderMasiva();
   }
 
@@ -1207,12 +1216,6 @@
         : `${it.categoria} · ${it.medio === 'Contado' ? 'Contado' : 'Tarjeta'}`;
       const metaCtx = `${MESES_CORTO[parseInt(it.mes, 10) - 1]} ${it.anio} · Pagó ${it.quien} · ${it.corresponde}`;
       const borde = idx === n - 1 ? 'border-bottom:none;' : '';
-      const menu = masiva.menuOpenId === it.id
-        ? `<div class="item-menu">
-             <button type="button" onclick="editarItem(${it.id})">Editar</button>
-             <button type="button" onclick="eliminarItem(${it.id})">Eliminar</button>
-           </div>`
-        : '';
       return `
         <div class="item-row" style="${borde}">
           <div class="item-main">
@@ -1221,8 +1224,7 @@
             <div class="item-meta-ctx">${escapeHtml(metaCtx)}</div>
           </div>
           <span class="item-monto">$${escapeHtml(it.montoDisplay)}</span>
-          <button type="button" class="item-menu-btn" onclick="toggleMenuItem(${it.id})">⋯</button>
-          ${menu}
+          <button type="button" class="item-menu-btn" data-id="${it.id}" onclick="toggleMenuItem(${it.id})">⋯</button>
         </div>`;
     }).join('');
 
@@ -1236,6 +1238,34 @@
       masiva.editingId ? 'Guardar cambios' : '+ Nuevo gasto';
     document.getElementById('masiva-submit').textContent =
       n > 1 ? `Registrar ${n} gastos` : 'Registrar gastos';
+
+    renderMenuItem();
+  }
+
+  // El menú se dibuja fuera del card (a nivel de body) para que no lo recorte
+  // el overflow del contenedor de la lista
+  function renderMenuItem() {
+    const layer = document.getElementById('item-menu-layer');
+    layer.innerHTML = '';
+    if (masiva.menuOpenId === null) return;
+
+    const id  = masiva.menuOpenId;
+    const btn = document.querySelector(`.item-menu-btn[data-id="${id}"]`);
+    if (!btn) { masiva.menuOpenId = null; return; }
+
+    const menu = document.createElement('div');
+    menu.className = 'item-menu';
+    menu.innerHTML =
+      `<button type="button" onclick="editarItem(${id})">Editar</button>` +
+      `<button type="button" onclick="eliminarItem(${id})">Eliminar</button>`;
+    layer.appendChild(menu);
+
+    const r     = btn.getBoundingClientRect();
+    const alto  = menu.offsetHeight;
+    const abajo = r.bottom + 6;
+    const cabe  = abajo + alto <= window.innerHeight - 12;
+    menu.style.top   = (cabe ? abajo : Math.max(12, r.top - 6 - alto)) + 'px';
+    menu.style.right = Math.max(12, window.innerWidth - r.right) + 'px';
   }
 
   function filasDeItem(it) {
