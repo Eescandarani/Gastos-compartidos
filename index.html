@@ -1312,13 +1312,24 @@
     btn.disabled = true;
     showToast('Registrando gastos…', '', true);
 
+    // Con muchas cuotas el Apps Script escribe fila por fila y puede demorar:
+    // avisamos en vez de dejar el spinner mudo
+    const esperaLarga = setTimeout(() => {
+      const el = document.getElementById('toast');
+      if (el.querySelector('.spinner')) {
+        el.lastElementChild.textContent = 'Esto puede tomar unos segundos más…';
+      }
+    }, 5000);
+
     try {
       await fetch(APPS_SCRIPT_URL, {
         method: 'POST',
         mode: 'no-cors',
         body: JSON.stringify({ filas }),
       });
-      showToast(`✓ Se registraron los ${lista.length} gastos`, 'success');
+      showToast(lista.length === 1
+        ? '✓ Se registró el gasto'
+        : `✓ Se registraron los ${lista.length} gastos`, 'success');
       masiva.items = [];
       masiva.menuOpenId = null;
       limpiarDraft();
@@ -1327,6 +1338,7 @@
       console.error(err);
       showToast('Error al enviar. Revisá la conexión.', 'error');
     } finally {
+      clearTimeout(esperaLarga);
       btn.disabled = false;
       renderMasiva();
     }
