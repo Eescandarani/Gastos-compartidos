@@ -886,18 +886,36 @@
     return parseFloat(val.replace(/\./g, '').replace(/,/g, '.')) || 0;
   }
 
+  // Identifica el intento en curso. Si un envío falla y se reintenta con el
+  // mismo contenido reusamos el id, así el Apps Script reconoce el lote y no
+  // lo escribe dos veces; si el contenido cambió, es otro lote.
+  let lotePendiente = null;
+
+  function nuevoLoteId() {
+    return crypto.randomUUID
+      ? crypto.randomUUID()
+      : Date.now().toString(36) + Math.random().toString(36).slice(2);
+  }
+
   // Envía las filas y confirma contra la respuesta del Apps Script.
   // Usa text/plain para que sea una petición simple (sin preflight); el web app
   // devuelve CORS, así que sí podemos leer si la escritura salió bien.
   async function enviarFilas(filas) {
+    const huella = JSON.stringify(filas);
+    if (!lotePendiente || lotePendiente.huella !== huella) {
+      lotePendiente = { huella, id: nuevoLoteId() };
+    }
+
     const resp = await fetch(APPS_SCRIPT_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ filas }),
+      body: JSON.stringify({ loteId: lotePendiente.id, filas }),
     });
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     const data = await resp.json();
     if (!data.ok) throw new Error(data.error || 'El servidor rechazó el envío');
+
+    lotePendiente = null;   // el lote quedó escrito: el próximo envío es otro
     return data;
   }
 
