@@ -12,6 +12,10 @@
   --error: #f87171;
   --radius: 14px;
   --radius-sm: 9px;
+  --nav-alto: 66px;
+  /* La barra para salir de la app ocupa el inset inferior; sin inset (Android,
+     navegador) se deja igual un respiro */
+  --nav-margen: max(env(safe-area-inset-bottom), 12px);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -21,13 +25,22 @@ body {
   background: var(--bg);
   color: var(--text);
   min-height: 100dvh;
-  /* Lugar para la barra de navegación inferior (en PC pasa a la izquierda) */
-  padding-bottom: calc(58px + env(safe-area-inset-bottom));
+  /* Con viewport-fit=cover la página va de borde a borde: arriba queda el
+     espacio de la barra de estado y abajo el de la navegación */
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: calc(var(--nav-alto) + var(--nav-margen));
+}
+
+/* Franja fija detrás de la hora, para que al scrollear el contenido no quede
+   debajo de la barra de estado */
+body::before {
+  content: ""; position: fixed; top: 0; left: 0; right: 0; z-index: 45;
+  height: env(safe-area-inset-top); background: var(--bg);
 }
 
 .header {
   position: sticky;
-  top: 0;
+  top: env(safe-area-inset-top);
   z-index: 10;
   background: rgba(15,15,19,0.85);
   backdrop-filter: blur(20px);
@@ -475,20 +488,20 @@ select option { background: #1a1a22; color: var(--text); }
   background: rgba(15,15,19,0.92);
   backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
   border-top: 1px solid var(--border);
-  padding-bottom: env(safe-area-inset-bottom);
+  padding: 0 env(safe-area-inset-right) var(--nav-margen) env(safe-area-inset-left);
 }
 
 .nav-marca { display: none; }
 
 .nav-item {
-  flex: 1; height: 58px;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+  flex: 1; height: var(--nav-alto);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
   color: var(--text-muted); text-decoration: none;
   font-size: 11px; font-weight: 500;
   transition: color 0.15s, background 0.15s;
 }
 
-.nav-item svg { width: 22px; height: 22px; }
+.nav-item svg { width: 24px; height: 24px; }
 .nav-item.activo { color: var(--accent); }
 
 @media (min-width: 768px) {
@@ -877,3 +890,57 @@ select option { background: #1a1a22; color: var(--text); }
 .cuota-row .faltan { font-size: 12px; color: var(--text-secondary); }
 .progreso { height: 4px; max-width: 220px; margin-top: 4px; border-radius: 2px; background: var(--surface2); overflow: hidden; }
 .progreso div { height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--accent), var(--accent2)); }
+
+/* ===== Carga ===== */
+/* Mientras no llegan los gastos, los números y gráficos se reemplazan por
+   bloques grises; nada muestra $0 ni un gráfico vacío. */
+@keyframes brillo {
+  from { background-position: 100% 0; }
+  to   { background-position: -100% 0; }
+}
+
+.esq {
+  display: block; border-radius: 6px;
+  background: linear-gradient(90deg, var(--surface2) 25%, #2c2c3a 50%, var(--surface2) 75%);
+  background-size: 200% 100%;
+  animation: brillo 1.4s ease-in-out infinite;
+}
+
+.cargando .esq-texto {
+  color: transparent !important;
+  border-radius: 6px;
+  background: linear-gradient(90deg, var(--surface2) 25%, #2c2c3a 50%, var(--surface2) 75%);
+  background-size: 200% 100%;
+  animation: brillo 1.4s ease-in-out infinite;
+}
+
+.cargando .torta {
+  background: linear-gradient(90deg, var(--surface2) 25%, #2c2c3a 50%, var(--surface2) 75%);
+  background-size: 200% 100%;
+  animation: brillo 1.4s ease-in-out infinite;
+}
+
+.cargando .chevron { visibility: hidden; }
+.cargando .total-mes .monto { line-height: 1; margin-top: 12px; }
+
+.esq-fila { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--border); }
+.esq-fila:last-child { border-bottom: none; }
+.esq-fila .izq { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+
+.esq-grafico { height: 206px; border-radius: 10px; }
+
+/* Si la carga pasa de 5 segundos, una pantalla que lo explica (la
+   navegación queda a la vista para poder irse) */
+.pantalla-carga {
+  position: fixed; inset: 0; z-index: 35;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+  padding: 24px 24px calc(var(--nav-alto) + var(--nav-margen));
+  background: var(--bg); color: var(--text-secondary); font-size: 15px; text-align: center;
+  animation: fadeUp 0.25s ease both;
+}
+
+.pantalla-carga .spinner { width: 28px; height: 28px; border-width: 3px; }
+
+@media (min-width: 768px) {
+  .pantalla-carga { left: 232px; padding-bottom: 24px; }
+}

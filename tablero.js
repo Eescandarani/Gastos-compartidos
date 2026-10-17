@@ -48,6 +48,9 @@ function init() {
 }
 
 async function cargar() {
+  // Solo la primera lectura muestra la carga; al recargar tras editar, la
+  // pantalla queda como está hasta que llegan los datos nuevos.
+  const quitarAviso = estado.gastos ? () => {} : avisoCargaLenta();
   try {
     estado.gastos = await cargarGastos();
     estado.error = false;
@@ -56,6 +59,8 @@ async function cargar() {
     estado.error = true;
     if (!estado.gastos) estado.gastos = [];
   }
+  quitarAviso();
+  document.body.classList.remove('cargando');
   pintar();
 }
 
@@ -63,10 +68,11 @@ async function cargar() {
 
 const sumar = l => l.reduce((acc, g) => acc + g.monto, 0);
 
+// Lo cargado más reciente primero: las altas se agregan al final de la hoja.
 function delMes() {
   return (estado.gastos || [])
     .filter(g => g.mes === estado.mes && g.anio === estado.anio)
-    .sort((x, y) => y.monto - x.monto);
+    .sort((x, y) => y.fila - x.fila);
 }
 
 function filtrados() {
@@ -120,16 +126,32 @@ const cantidad = n => n === 1 ? '1 gasto' : `${n} gastos`;
 /* ============ Pintado ============ */
 
 function pintar() {
+  if (!estado.gastos) { pintarEsqueleto(); return; }
   const todos = delMes();
   const lista = filtrados();
 
   $('t-total').textContent = plata(sumar(lista));
   $('t-pago-a').textContent = plata(sumar(deQuien(lista, 'A')));
   $('t-pago-b').textContent = plata(sumar(deQuien(lista, 'B')));
-  $('t-saldos-resumen').textContent = estado.gastos ? saldos(todos).resumen : '';
+  $('t-saldos-resumen').textContent = saldos(todos).resumen;
 
   pintarTorta(todos);
   pintarLista();
+}
+
+// Textos de relleno con el ancho aproximado del dato: el CSS los vuelve bloques grises
+function pintarEsqueleto() {
+  $('t-total').textContent = '$0.000.000';
+  $('t-pago-a').textContent = '$000.000';
+  $('t-pago-b').textContent = '$000.000';
+  $('t-saldos-resumen').textContent = `${PERSONA_B} le debe a ${PERSONA_A} $00.000`;
+  $('t-estado').textContent = '00 gastos';
+  $('t-categorias').innerHTML = [55, 70, 45, 60].map(w => `
+    <div class="categoria" style="cursor:default">
+      <span class="esq" style="height:12px; width:${w}%"></span>
+      <span class="esq" style="height:12px; width:72px; margin-left:auto"></span>
+    </div>`).join('');
+  $('t-lista').innerHTML = filasEsqueleto(6);
 }
 
 function pintarTorta(todos) {
@@ -192,11 +214,9 @@ function filaGasto(g, conMenu) {
 
 function pintarLista() {
   const lista = filtrados();
-  $('t-estado').textContent = !estado.gastos ? 'Cargando…'
-    : estado.error ? 'No se pudo cargar' : cantidad(lista.length);
+  $('t-estado').textContent = estado.error ? 'No se pudo cargar' : cantidad(lista.length);
 
   const cont = $('t-lista');
-  if (!estado.gastos) { cont.innerHTML = ''; return; }
   if (estado.error && !estado.gastos.length) {
     cont.innerHTML = '<div class="lista-vacia">No se pudieron leer los gastos. Revisá la conexión y recargá.</div>';
     return;

@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>Gastos del mes</title>
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
@@ -15,11 +15,10 @@
   <meta name="apple-mobile-web-app-title" content="Gastos" />
   <link rel="stylesheet" href="styles.css" />
 </head>
-<body>
+<body class="cargando">
 
 <div class="header">
   <div class="header-inner ancho">
-    <a href="index.html" class="back-btn" aria-label="Nuevo gasto" style="text-decoration:none;">‹</a>
     <h1>Gastos del mes</h1>
   </div>
 </div>
@@ -34,24 +33,24 @@
 
     <div class="total-mes">
       <span class="rotulo">Total gastado en el mes</span>
-      <span class="monto" id="t-total">$0</span>
+      <span class="monto esq-texto" id="t-total">$0</span>
     </div>
 
     <div class="pagos">
       <button type="button" class="pago-card" data-persona="A">
         <span class="quien"><span>Pagó <span class="nombre-a"></span></span><span class="chevron">›</span></span>
-        <span class="monto" id="t-pago-a">$0</span>
+        <span class="monto esq-texto" id="t-pago-a">$0</span>
       </button>
       <button type="button" class="pago-card" data-persona="B">
         <span class="quien"><span>Pagó <span class="nombre-b"></span></span><span class="chevron">›</span></span>
-        <span class="monto" id="t-pago-b">$0</span>
+        <span class="monto esq-texto" id="t-pago-b">$0</span>
       </button>
     </div>
 
     <button type="button" class="saldos-btn" id="t-saldos">
       <span class="titulo">Saldos</span>
       <span class="detalle">
-        <span class="resumen" id="t-saldos-resumen"></span>
+        <span class="resumen esq-texto" id="t-saldos-resumen"></span>
         <span class="chevron">›</span>
       </span>
     </button>
@@ -69,7 +68,7 @@
     <div style="animation: fadeUp 0.3s ease both; animation-delay: 0.15s;">
       <div class="rotulo-fila">
         <span class="rotulo">Gastos del mes</span>
-        <span class="estado" id="t-estado">Cargando…</span>
+        <span class="estado esq-texto" id="t-estado">Cargando…</span>
       </div>
       <div class="lista" id="t-lista"></div>
     </div>

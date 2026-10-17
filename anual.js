@@ -25,6 +25,7 @@ function init() {
 }
 
 async function cargar() {
+  const quitarAviso = avisoCargaLenta();
   try {
     estado.gastos = await cargarGastos();
     estado.error = false;
@@ -33,6 +34,8 @@ async function cargar() {
     estado.error = true;
     estado.gastos = [];
   }
+  quitarAviso();
+  document.body.classList.remove('cargando');
   pintar();
 }
 
@@ -67,6 +70,7 @@ function pintarSelectAnio() {
 
 function pintar() {
   pintarSelectAnio();
+  if (!estado.gastos) { pintarEsqueleto(); return; }
 
   const ps = periodos();
   const idx = {};
@@ -160,10 +164,19 @@ function grafico(id, ps, series) {
     }));
 }
 
+// Sin datos todavía: bloques grises en lugar de ejes en 0 y líneas planas
+function pintarEsqueleto() {
+  ['g1', 'g2'].forEach(id => {
+    $(id + '-leyenda').innerHTML = '';
+    $(id).innerHTML = '<span class="esq esq-grafico"></span>';
+  });
+  $('a-vig-count').textContent = '0 compras';
+  $('a-vigentes').innerHTML = filasEsqueleto(3);
+}
+
 // Compras en cuotas que todavía tienen alguna desde el mes actual en adelante.
 function pintarVigentes() {
   const cont = $('a-vigentes');
-  if (!estado.gastos) { cont.innerHTML = ''; $('a-vig-count').textContent = 'Cargando…'; return; }
   if (estado.error) {
     cont.innerHTML = '<div class="lista-vacia">No se pudieron leer los gastos. Revisá la conexión y recargá.</div>';
     $('a-vig-count').textContent = 'No se pudo cargar';

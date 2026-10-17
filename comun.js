@@ -80,6 +80,35 @@ function opcionesAnios(select, elegido) {
   }
 }
 
+// Si la lectura de la hoja pasa de 5 segundos, se tapa el skeleton con una
+// pantalla que avisa que se están cargando. Devuelve la función que la saca.
+function avisoCargaLenta() {
+  let pantalla = null;
+  const timer = setTimeout(() => {
+    pantalla = document.createElement('div');
+    pantalla.className = 'pantalla-carga';
+    pantalla.setAttribute('role', 'status');
+    pantalla.innerHTML = '<div class="spinner"></div><span>Cargando los gastos…</span>';
+    document.body.appendChild(pantalla);
+  }, 5000);
+  return () => {
+    clearTimeout(timer);
+    if (pantalla) pantalla.remove();
+  };
+}
+
+// Filas grises para las listas mientras cargan
+function filasEsqueleto(n) {
+  return Array.from({ length: n }, (_, i) => `
+    <div class="esq-fila">
+      <div class="izq">
+        <span class="esq" style="height:14px; width:${[62, 45, 70, 52, 38, 58][i % 6]}%"></span>
+        <span class="esq" style="height:10px; width:30%"></span>
+      </div>
+      <span class="esq" style="height:14px; width:72px"></span>
+    </div>`).join('');
+}
+
 let toastTimer;
 function showToast(msg, type = '', loading = false) {
   const el = document.getElementById('toast');
