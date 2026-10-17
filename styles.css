@@ -757,6 +757,30 @@ select option { background: #1a1a22; color: var(--text); }
 .hoja-titulo { flex: 1; min-width: 0; }
 .hoja-titulo .titulo { font-size: 17px; font-weight: 600; letter-spacing: -0.3px; }
 .hoja-titulo .sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.hoja-titulo .sub .info { position: relative; display: inline-flex; vertical-align: middle; margin-left: 6px; }
+.info-btn {
+  width: 16px; height: 16px; border-radius: 50%; padding: 0;
+  border: 1px solid currentColor; background: none; color: var(--text-muted);
+  font: italic 600 10px/1 Georgia, serif; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+/* Área de toque más grande que el ícono */
+.info-btn::after { content: ''; position: absolute; inset: -10px; }
+.info-tip {
+  position: absolute; top: calc(100% + 8px); left: 50%; transform: translateX(-50%);
+  width: max-content; max-width: 240px; z-index: 5;
+  padding: 9px 11px; border-radius: 10px;
+  background: var(--surface2); border: 1px solid var(--border); color: var(--text);
+  font-size: 12px; line-height: 1.4; white-space: normal;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+  opacity: 0; visibility: hidden; transition: opacity 0.15s, visibility 0.15s;
+}
+.info.abierta .info-tip { opacity: 1; visibility: visible; }
+.info.abierta .info-btn { color: var(--text); }
+@media (hover: hover) {
+  .info:hover .info-tip, .info-btn:focus-visible + .info-tip { opacity: 1; visibility: visible; }
+  .info:hover .info-btn { color: var(--text); }
+}
 
 .cerrar-btn {
   width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;

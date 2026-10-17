@@ -254,12 +254,12 @@ function abrirHoja(html, { clase = '', encima = false } = {}) {
 
 function cerrarHoja(fondo) { fondo.remove(); }
 
-function encabezado(titulo, sub) {
+function encabezado(titulo, sub, extra = '') {
   return `
     <div class="hoja-header">
       <div class="hoja-titulo">
         <div class="titulo">${escapeHtml(titulo)}</div>
-        ${sub ? `<div class="sub">${escapeHtml(sub)}</div>` : ''}
+        ${sub ? `<div class="sub">${escapeHtml(sub)}${extra}</div>` : ''}
       </div>
       <button type="button" class="cerrar-btn" data-cerrar aria-label="Cerrar">✕</button>
     </div>`;
@@ -282,8 +282,12 @@ function abrirSaldos() {
   estado.menuKey = null; pintarLista();
   const s = saldos(delMes());
   const celda = v => `<div class="celda">${plata(v)}</div>`;
-  abrirHoja(
-    encabezado('Saldos', `${etiquetaMes()} · Sin Servicios`) + `
+  const fondo = abrirHoja(
+    encabezado('Saldos', `${etiquetaMes()} · Sin Servicios`, `
+      <span class="info">
+        <button type="button" class="info-btn" aria-label="Por qué sin Servicios" aria-describedby="info-servicios">i</button>
+        <span class="info-tip" role="tooltip" id="info-servicios">Para calcular los saldos se descontaron los gastos de la categoría “Servicios”.</span>
+      </span>`) + `
     <div class="saldo-principal">
       <span class="quien">${escapeHtml(s.quienDebe)}</span>
       <span class="monto">${plata(s.deuda)}</span>
@@ -293,6 +297,14 @@ function abrirSaldos() {
       <span class="persona">${escapeHtml(PERSONA_A)}</span>${celda(s.pA)}<span class="menos">−</span>${celda(s.cA)}
       <span class="persona">${escapeHtml(PERSONA_B)}</span>${celda(s.pB)}<span class="menos">−</span>${celda(s.cB)}
     </div>`, { clase: 'ancha' });
+
+  // En desktop se abre con hover; en el celular, con un tap (y otro tap la cierra)
+  const info = fondo.querySelector('.info');
+  info.querySelector('.info-btn').addEventListener('click', e => {
+    e.stopPropagation();
+    info.classList.toggle('abierta');
+  });
+  fondo.addEventListener('click', e => { if (!info.contains(e.target)) info.classList.remove('abierta'); });
 }
 
 /* ============ Editar / eliminar ============ */
