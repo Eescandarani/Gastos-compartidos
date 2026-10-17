@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Resumen anual</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
+  <link rel="manifest" href="site.webmanifest" />
+  <meta name="theme-color" content="#0f0f13" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Gastos" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner medio">
+    <h1>Resumen anual</h1>
+  </div>
+</div>
+
+<div class="anual">
+  <select class="filtro-select vacio" id="a-anio" aria-label="Año"></select>
+
+  <div class="bloque">
+    <div class="rotulo-fila">
+      <span class="rotulo">Gastos por mes</span>
+      <div class="leyendas" id="g1-leyenda"></div>
+    </div>
+    <div class="grafico-card" id="g1"></div>
+  </div>
+
+  <div class="bloque">
+    <div class="rotulo-fila">
+      <span class="rotulo">Total en cuotas por mes</span>
+      <div class="leyendas" id="g2-leyenda"></div>
+    </div>
+    <div class="grafico-card" id="g2"></div>
+  </div>
+
+  <div class="bloque">
+    <div class="rotulo-fila">
+      <span class="rotulo">Cuotas vigentes</span>
+      <span class="estado" id="a-vig-count">Cargando…</span>
+    </div>
+    <div class="lista" id="a-vigentes"></div>
+  </div>
+</div>
+
+<nav class="navbar" id="navbar" data-actual="anual"></nav>
+<div class="toast" id="toast"></div>
+
+<script src="comun.js"></script>
+<script src="anual.js"></script>
+</body>
+</html>

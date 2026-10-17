@@ -13,476 +13,7 @@
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Gastos" />
-  <style>
-    :root {
-      --bg: #0f0f13;
-      --surface: #1a1a22;
-      --surface2: #22222e;
-      --border: rgba(255,255,255,0.07);
-      --accent: #c084fc;
-      --accent2: #818cf8;
-      --text: #f0f0f5;
-      --text-muted: #6b6b80;
-      --text-secondary: #9999b0;
-      --success: #34d399;
-      --error: #f87171;
-      --radius: 14px;
-      --radius-sm: 9px;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-
-    body {
-      font-family: -apple-system, 'SF Pro Text', BlinkMacSystemFont, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100dvh;
-      padding-bottom: env(safe-area-inset-bottom);
-    }
-
-    .header {
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      background: rgba(15,15,19,0.85);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border-bottom: 1px solid var(--border);
-      padding: 16px 20px 14px;
-    }
-
-    .header-inner { display: flex; align-items: center; gap: 10px; }
-
-    .header-icon {
-      width: 32px; height: 32px;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      border-radius: 8px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 16px; flex-shrink: 0;
-    }
-
-    .header h1 { font-size: 17px; font-weight: 600; letter-spacing: -0.3px; }
-    .header p  { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
-
-    .form {
-      padding: 20px 16px;
-      display: flex; flex-direction: column; gap: 12px;
-      max-width: 480px; margin: 0 auto;
-    }
-
-    .section-label {
-      font-size: 11px; font-weight: 600; letter-spacing: 0.6px;
-      text-transform: uppercase; color: var(--text-muted);
-      margin-bottom: 8px; padding-left: 4px;
-    }
-
-    .card {
-      background: var(--surface);
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      overflow: hidden;
-    }
-
-    .card-row {
-      display: flex; align-items: center;
-      padding: 0 16px; min-height: 52px;
-      border-bottom: 1px solid var(--border);
-      gap: 12px; position: relative;
-    }
-
-    .card-row:last-child { border-bottom: none; }
-    .card-row:focus-within { background: rgba(192,132,252,0.04); }
-
-    .row-label {
-      font-size: 15px; color: var(--text);
-      flex-shrink: 0; min-width: 100px;
-    }
-
-    input, select, textarea {
-      background: transparent; border: none; outline: none;
-      color: var(--text); font-size: 15px; font-family: inherit;
-      flex: 1; text-align: right;
-      -webkit-appearance: none; appearance: none;
-    }
-
-    input::placeholder { color: var(--text-muted); }
-
-    select option { background: #1a1a22; color: var(--text); }
-
-    .select-wrapper {
-      flex: 1; display: flex; align-items: center;
-      justify-content: flex-end; gap: 4px;
-    }
-
-    .select-wrapper select { flex: 1; cursor: pointer; color: var(--text-secondary); text-align: left; }
-    .select-wrapper select.has-value { color: var(--text); }
-
-    .chevron { color: var(--text-muted); font-size: 16px; flex-shrink: 0; }
-
-    /* Monto — $ siempre pegado al número */
-    .monto-wrapper {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-    }
-
-    .monto-inner {
-      display: flex;
-      align-items: center;
-      gap: 0;
-    }
-
-    .currency-tag {
-      font-size: 22px; font-weight: 300;
-      color: var(--text); flex-shrink: 0;
-      letter-spacing: -0.5px; line-height: 1;
-      display: none;
-    }
-
-    .monto-input {
-      font-size: 22px; font-weight: 300;
-      letter-spacing: -0.5px;
-      flex: none;
-      width: auto;
-      min-width: 2ch;
-      max-width: 180px;
-      text-align: left;
-    }
-
-    /* Cuando está vacío mostramos placeholder centrado a la derecha */
-    .monto-input:placeholder-shown {
-      min-width: 60px;
-      text-align: right;
-    }
-
-    /* Segment */
-    .segment {
-      display: flex; background: var(--surface2);
-      border-radius: var(--radius-sm); padding: 3px; gap: 2px;
-    }
-
-    .segment-btn {
-      flex: 1; padding: 7px 8px; border: none; border-radius: 7px;
-      background: transparent; color: var(--text-muted);
-      font-size: 13px; font-weight: 500; font-family: inherit;
-      cursor: pointer; transition: all 0.18s ease;
-      text-align: center; white-space: nowrap;
-    }
-
-    .segment-btn.active {
-      background: var(--surface); color: var(--text);
-      box-shadow: 0 1px 4px rgba(0,0,0,0.4);
-    }
-
-    /* "Los 2" recibe más flex para no romper en 2 líneas */
-    .segment-btn.wide { flex: 1.5; }
-
-    .cuotas-row { display: none; }
-    .cuotas-row.visible { display: flex; }
-
-    .stepper { display: flex; align-items: center; gap: 12px; margin-left: auto; }
-
-    .stepper-btn {
-      width: 28px; height: 28px; border-radius: 50%; border: none;
-      background: var(--surface2); color: var(--text);
-      font-size: 18px; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      transition: background 0.15s; flex-shrink: 0;
-    }
-
-    .stepper-btn:active  { background: var(--accent); }
-    .stepper-btn:disabled { opacity: 0.3; cursor: default; }
-
-    .stepper-value {
-      font-size: 17px; font-weight: 500;
-      min-width: 24px; text-align: center; color: var(--text);
-    }
-
-    /* Resumen row */
-    .resumen-row { gap: 10px; }
-
-    .cal-icon { font-size: 17px; flex-shrink: 0; opacity: 0.65; }
-
-    .resumen-selects {
-      display: flex; align-items: center;
-      flex: 1; justify-content: flex-start;
-    }
-
-    .resumen-selects select { color: var(--text); cursor: pointer; padding: 0 2px; text-align: left; }
-
-    .date-sep { color: var(--text-muted); font-size: 15px; padding: 0 3px; flex-shrink: 0; }
-
-    .corresponde-note {
-      font-size: 11px; color: var(--text-muted);
-      padding: 8px 16px 10px; line-height: 1.4;
-    }
-
-    .submit-btn {
-      width: 100%; padding: 16px;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      color: #fff; font-size: 16px; font-weight: 600;
-      font-family: inherit; border: none; border-radius: var(--radius);
-      cursor: pointer; transition: opacity 0.2s, transform 0.1s;
-      letter-spacing: -0.2px;
-    }
-
-    .submit-btn:active   { opacity: 0.85; transform: scale(0.98); }
-    .dashboard-btn {
-      display: block;
-      width: 100%;
-      padding: 14px;
-      background: transparent;
-      color: var(--text);
-      font-size: 15px;
-      font-weight: 500;
-      font-family: inherit;
-      border: none;
-      border-radius: var(--radius);
-      cursor: pointer;
-      text-align: center;
-      text-decoration: none;
-      margin-top: 10px;
-      transition: color 0.2s;
-    }
-
-    .dashboard-btn:active { color: var(--accent); }
-
-    .submit-btn:disabled { opacity: 0.4; cursor: default; transform: none; }
-
-    .toast {
-      position: fixed;
-      bottom: calc(24px + env(safe-area-inset-bottom));
-      left: 50%; transform: translateX(-50%) translateY(80px);
-      background: var(--surface2); border: 1px solid var(--border);
-      color: var(--text); padding: 12px 20px; border-radius: 24px;
-      font-size: 14px; font-weight: 500; white-space: nowrap;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-      transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
-      z-index: 100; display: flex; align-items: center; gap: 8px;
-    }
-
-    .toast.show    { transform: translateX(-50%) translateY(0); }
-    .toast.success { border-color: rgba(52,211,153,0.3); }
-    .toast.error   { border-color: rgba(248,113,113,0.3); }
-
-    .spinner {
-      width: 16px; height: 16px;
-      border: 2px solid rgba(255,255,255,0.3);
-      border-top-color: #fff; border-radius: 50%;
-      animation: spin 0.6s linear infinite; flex-shrink: 0;
-    }
-
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    .section { animation: fadeUp 0.3s ease both; }
-    .section:nth-child(1) { animation-delay: 0.05s; }
-    .section:nth-child(2) { animation-delay: 0.10s; }
-    .section:nth-child(3) { animation-delay: 0.15s; }
-    .section:nth-child(4) { animation-delay: 0.20s; }
-    .section:nth-child(5) { animation-delay: 0.25s; }
-
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(10px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    /* Hero monto */
-    .hero-monto {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 24px 16px 0px;
-    }
-
-    .hero-monto-inner {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 2px;
-    }
-
-    .hero-currency {
-      font-size: 36px;
-      font-weight: 300;
-      color: var(--text-muted);
-      letter-spacing: -1px;
-      line-height: 1;
-      display: none;
-      padding-top: 6px;
-    }
-
-    .hero-monto-input {
-      font-size: 56px;
-      font-weight: 200;
-      letter-spacing: -3px;
-      color: var(--text);
-      border: none;
-      outline: none;
-      background: transparent;
-      font-family: inherit;
-      text-align: center;
-      width: auto;
-      min-width: 3ch;
-      max-width: 280px;
-      line-height: 1;
-      -webkit-appearance: none;
-      appearance: none;
-    }
-
-    .hero-monto-input::placeholder {
-      color: var(--text-muted);
-    }
-
-    /* Descripción flotante */
-    .descripcion-flotante {
-      max-width: 480px;
-      margin: 0 auto;
-      padding: 0 16px;
-      margin-top: 0;
-    }
-
-    .descripcion-flotante input {
-      width: 100%;
-      background: transparent;
-      border: none;
-      outline: none;
-      color: var(--text-secondary);
-      font-size: 16px;
-      font-family: inherit;
-      text-align: center;
-      padding: 0 0 24px;
-      margin-top: 0;
-      -webkit-appearance: none;
-      appearance: none;
-    }
-
-    .descripcion-flotante input::placeholder {
-      color: var(--text-muted);
-    }
-
-
-    /* ===== Carga masiva ===== */
-    .view { display: none; }
-    .view.active { display: block; }
-
-    .back-btn {
-      width: 32px; height: 32px; flex-shrink: 0;
-      background: var(--surface2); border: none; border-radius: 8px;
-      color: var(--text); font-size: 20px; line-height: 1;
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer; transition: background 0.15s; padding-bottom: 2px;
-    }
-
-    .back-btn:active { background: var(--accent); }
-
-    .card-title {
-      font-size: 13px; font-weight: 600; color: var(--text-secondary);
-      padding: 14px 16px 11px; border-bottom: 1px solid var(--border);
-    }
-
-    .item-row {
-      display: flex; align-items: center; gap: 10px;
-      padding: 11px 8px 11px 16px;
-      border-bottom: 1px solid var(--border);
-      position: relative;
-    }
-
-    .item-main { flex: 1; min-width: 0; }
-
-    .item-desc {
-      font-size: 15px; color: var(--text);
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-
-    .item-meta,
-    .item-meta-ctx { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
-
-    .item-monto { font-size: 15px; font-weight: 500; color: var(--text); flex-shrink: 0; }
-
-    .item-menu-btn {
-      width: 28px; height: 28px; flex-shrink: 0;
-      border: none; border-radius: 50%; background: transparent;
-      color: var(--text-muted); font-size: 18px; font-family: inherit;
-      cursor: pointer; display: flex; align-items: center; justify-content: center;
-    }
-
-    .item-menu-btn:active { background: var(--surface2); }
-
-    .item-menu {
-      position: fixed; z-index: 60;
-      background: var(--surface2); border: 1px solid var(--border);
-      border-radius: var(--radius-sm); overflow: hidden; min-width: 140px;
-      box-shadow: 0 8px 28px rgba(0,0,0,0.55);
-      animation: fadeUp 0.15s ease both;
-    }
-
-    .item-menu button {
-      display: block; width: 100%; padding: 11px 14px; text-align: left;
-      background: transparent; border: none; color: var(--text);
-      font-size: 14px; font-family: inherit; cursor: pointer;
-    }
-
-    .item-menu button + button { border-top: 1px solid var(--border); color: var(--error); }
-    .item-menu button:active { background: rgba(255,255,255,0.05); }
-
-    .total-row {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 13px 16px; border-top: 1px solid var(--border);
-      background: rgba(255,255,255,0.02);
-    }
-
-    .total-label { font-size: 13px; color: var(--text-muted); }
-    .total-value { font-size: 16px; font-weight: 600; color: var(--text); }
-
-    .secondary-btn {
-      width: 100%; padding: 14px;
-      background: var(--surface2); border: none;
-      border-top: 1px solid var(--border);
-      color: var(--accent); font-size: 15px; font-weight: 500;
-      font-family: inherit; cursor: pointer;
-      transition: opacity 0.2s, transform 0.1s, background 0.2s;
-    }
-
-    .secondary-btn:active { opacity: 0.7; }
-
-    /* Variante suelta, fuera de un card (acceso a carga masiva) */
-    .secondary-btn.standalone {
-      display: flex; align-items: center; justify-content: center; gap: 5px;
-      padding: 16px; margin-top: 10px;
-      background: var(--surface2); color: var(--text);
-      border: 1px solid var(--border); border-radius: var(--radius);
-      font-size: 16px; font-weight: 600; letter-spacing: -0.2px;
-    }
-
-    .secondary-btn.standalone .chevron { color: var(--accent); font-size: 17px; }
-
-    .secondary-btn.standalone:active {
-      opacity: 1; transform: scale(0.98); background: var(--surface);
-    }
-
-    .monto-cell {
-      flex: 1; display: flex; align-items: center;
-      justify-content: flex-end; gap: 0;
-    }
-
-    .monto-cell .currency-tag-d { font-size: 17px; color: var(--text); flex-shrink: 0; }
-
-    .monto-cell input {
-      flex: none; width: auto; min-width: 60px;
-      text-align: right; font-size: 17px;
-    }
-
-    @supports (-webkit-touch-callout: none) {
-      input, select, textarea { font-size: 16px !important; }
-      .monto-input            { font-size: 22px !important; }
-      .currency-tag           { font-size: 22px !important; }
-      .hero-monto-input       { font-size: 56px !important; }
-      .hero-currency          { font-size: 36px !important; }
-      .segment-btn            { font-size: 13px !important; }
-    }
-  </style>
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
 
@@ -623,9 +154,6 @@
     <button type="button" class="secondary-btn standalone" onclick="irMasiva()">
       Carga masiva <span class="chevron">›</span>
     </button>
-    <a href="https://datastudio.google.com/reporting/d9d5502c-7d67-4954-a63a-8ad81a9175c3/page/PJfxF" target="_blank" class="dashboard-btn">
-      Tablero de gastos
-    </a>
   </div>
 
 </form>
@@ -760,9 +288,7 @@
       <button type="button" class="submit-btn" id="masiva-submit" onclick="registrarMasivo()">
         Registrar gastos
       </button>
-      <a href="https://datastudio.google.com/reporting/d9d5502c-7d67-4954-a63a-8ad81a9175c3/page/PJfxF" target="_blank" class="dashboard-btn">
-        Tablero de gastos
-      </a>
+      <a href="tablero.html" class="dashboard-btn">Tablero de gastos</a>
     </div>
 
   </form>
@@ -770,11 +296,11 @@
 
 <div class="item-menu-layer" id="item-menu-layer"></div>
 
+<nav class="navbar" id="navbar" data-actual="nuevo"></nav>
 <div class="toast" id="toast"></div>
 
+<script src="comun.js"></script>
 <script>
-  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw0eXUxtk04lXH2F5JUzLCiMRVes_ZPefD9OdsYoHEmKDv7lIH3zC_BEbq9zsKxieE/exec';
-
   const state = {
     quien: null,
     corresponde: 'Los 2',
@@ -900,21 +426,13 @@
   }
 
   // Envía las filas y confirma contra la respuesta del Apps Script.
-  // Usa text/plain para que sea una petición simple (sin preflight); el web app
-  // devuelve CORS, así que sí podemos leer si la escritura salió bien.
   async function enviarFilas(filas) {
     const huella = JSON.stringify(filas);
     if (!lotePendiente || lotePendiente.huella !== huella) {
       lotePendiente = { huella, id: nuevoLoteId() };
     }
 
-    const resp = await fetch(APPS_SCRIPT_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ loteId: lotePendiente.id, filas }),
-    });
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-    const data = await resp.json();
+    const data = await llamarScript({ loteId: lotePendiente.id, filas });
     if (!data.ok) throw new Error(data.error || 'El servidor rechazó el envío');
 
     lotePendiente = null;   // el lote quedó escrito: el próximo envío es otro
@@ -1019,24 +537,9 @@
     document.getElementById('anio-resumen').value = hoy.getFullYear();
   }
 
-  let toastTimer;
-  function showToast(msg, type = '', loading = false) {
-    const el = document.getElementById('toast');
-    el.innerHTML = (loading ? '<div class="spinner"></div>' : '') + '<span></span>';
-    el.lastElementChild.textContent = msg;
-    el.className = 'toast show ' + type;
-    clearTimeout(toastTimer);
-    if (!loading) toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
-  }
-
   init();
 
   /* ============ CARGA MASIVA ============ */
-
-  const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
-                 'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-  const MESES_CORTO = ['Ene','Feb','Mar','Abr','May','Jun',
-                       'Jul','Ago','Sep','Oct','Nov','Dic'];
 
   const masiva = {
     items: [],
@@ -1140,11 +643,6 @@
   function dGetMonto() {
     const val = document.getElementById('d-monto').value;
     return parseFloat(val.replace(/\./g, '').replace(/,/g, '.')) || 0;
-  }
-
-  function escapeHtml(s) {
-    return String(s).replace(/[&<>"']/g, c =>
-      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   }
 
   function limpiarDraft(ultimo) {
