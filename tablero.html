@@ -66,9 +66,15 @@
   </div>
   <div class="columna">
     <div style="animation: fadeUp 0.3s ease both; animation-delay: 0.15s;">
-      <div class="rotulo-fila">
-        <span class="rotulo">Gastos del mes</span>
-        <span class="estado esq-texto" id="t-estado">Cargando…</span>
+      <div class="rotulo-fila lista-encabezado">
+        <div class="lista-titulo">
+          <span class="rotulo">Gastos del mes</span>
+          <span class="estado esq-texto" id="t-estado">Cargando…</span>
+        </div>
+        <div class="chips-medio" role="group" aria-label="Filtrar por medio de pago">
+          <button type="button" class="chip-medio" data-medio="Contado" aria-pressed="false">Contado</button>
+          <button type="button" class="chip-medio" data-medio="Tarjeta de crédito" aria-pressed="false">Tarjeta</button>
+        </div>
       </div>
       <div class="lista" id="t-lista"></div>
     </div>

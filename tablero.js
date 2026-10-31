@@ -9,6 +9,7 @@ const estado = {
   mes: hoy.getMonth() + 1,
   anio: hoy.getFullYear(),
   cat: null,          // categoría elegida en la torta
+  medio: null,        // medio de pago elegido en los chips de la lista
   menuKey: null,      // gasto con el menú ⋮ abierto
 };
 
@@ -34,6 +35,18 @@ function init() {
   document.querySelectorAll('.pago-card').forEach(btn =>
     btn.addEventListener('click', () => abrirPersona(btn.dataset.persona)));
   $('t-saldos').addEventListener('click', abrirSaldos);
+
+  document.querySelectorAll('.chip-medio').forEach(btn =>
+    btn.addEventListener('click', () => {
+      estado.medio = estado.medio === btn.dataset.medio ? null : btn.dataset.medio;
+      estado.menuKey = null;
+      document.querySelectorAll('.chip-medio').forEach(b => {
+        const activo = b.dataset.medio === estado.medio;
+        b.classList.toggle('activo', activo);
+        b.setAttribute('aria-pressed', activo);
+      });
+      pintar();
+    }));
 
   // Cerrar el menú ⋮ al tocar fuera
   document.addEventListener('pointerdown', e => {
@@ -78,6 +91,12 @@ function delMes() {
 function filtrados() {
   const todos = delMes();
   return estado.cat ? todos.filter(g => g.categoria === estado.cat) : todos;
+}
+
+// El medio de pago filtra solo la lista: los totales no cambian con los chips.
+function deLaLista() {
+  const lista = filtrados();
+  return estado.medio ? lista.filter(g => igual(g.medio, estado.medio)) : lista;
 }
 
 function deQuien(lista, p) {
@@ -213,7 +232,7 @@ function filaGasto(g, conMenu) {
 }
 
 function pintarLista() {
-  const lista = filtrados();
+  const lista = deLaLista();
   $('t-estado').textContent = estado.error ? 'No se pudo cargar' : cantidad(lista.length);
 
   const cont = $('t-lista');
@@ -223,7 +242,7 @@ function pintarLista() {
   }
   cont.innerHTML = lista.length
     ? lista.map(g => filaGasto(g, true)).join('')
-    : '<div class="lista-vacia">No hay gastos en este mes.</div>';
+    : `<div class="lista-vacia">${estado.medio ? 'No hay gastos con este medio de pago.' : 'No hay gastos en este mes.'}</div>`;
 
   cont.querySelectorAll('.gasto-menu-btn').forEach(btn =>
     btn.addEventListener('click', () => {
