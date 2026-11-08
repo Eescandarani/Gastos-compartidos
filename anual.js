@@ -127,21 +127,25 @@ function grafico(id, ps, series) {
       stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>`;
   }).join('');
 
-  let seleccion = '';
-  if (haySel) {
-    const left = (sel + 0.5) / N * 100;
-    const shift = sel < N / 2 ? 'translateX(8px)' : 'translateX(calc(-100% - 8px))';
-    const total = series.reduce((acc, s) => acc + s.data[sel], 0);
-    seleccion = `
+  // Tooltip del mes elegido (clic/tap) o del que está bajo el mouse.
+  // Solo se redibuja esta capa, así el hover no reconstruye el gráfico.
+  const capaSeleccion = i => {
+    if (i === null || i >= N) return '';
+    const left = (i + 0.5) / N * 100;
+    const shift = i < N / 2 ? 'translateX(8px)' : 'translateX(calc(-100% - 8px))';
+    const total = series.reduce((acc, s) => acc + s.data[i], 0);
+    return `
       <div class="guia" style="left:${left}%"></div>
-      ${series.map(s => `<span class="punto" style="left:${left}%; top:${yPct(s.data[sel])}%; background:${s.color}"></span>`).join('')}
+      ${series.map(s => `<span class="punto" style="left:${left}%; top:${yPct(s.data[i])}%; background:${s.color}"></span>`).join('')}
       <div class="tip" style="left:${left}%; transform:${shift}">
-        <span class="titulo">${ps[sel].titulo}</span>
+        <span class="titulo">${ps[i].titulo}</span>
         ${series.map(s => `<span class="fila"><span class="color" style="background:${s.color}"></span>
-          <span class="nombre">${escapeHtml(s.label)}</span><span class="valor">${plata(s.data[sel])}</span></span>`).join('')}
+          <span class="nombre">${escapeHtml(s.label)}</span><span class="valor">${plata(s.data[i])}</span></span>`).join('')}
         ${series.length > 1 ? `<span class="fila total"><span class="nombre">Total</span><span class="valor">${plata(total)}</span></span>` : ''}
       </div>`;
-  }
+  };
+  const etiquetas = i => ps.map((p, j) =>
+    `<span class="${i === j ? 'sel' : ''}">${j % salto === 0 || i === j ? p.label : ''}</span>`).join('');
 
   $(id).innerHTML = `
     <div class="grafico">
@@ -150,18 +154,34 @@ function grafico(id, ps, series) {
         ${lineas}
         <div class="columnas">${ps.map((p, i) =>
           `<button type="button" data-i="${i}" aria-label="${p.titulo}"></button>`).join('')}</div>
-        ${seleccion}
+        <div class="seleccion">${capaSeleccion(haySel ? sel : null)}</div>
       </div>
     </div>
-    <div class="meses">${ps.map((p, i) =>
-      `<span class="${sel === i ? 'sel' : ''}">${i % salto === 0 || sel === i ? p.label : ''}</span>`).join('')}</div>`;
+    <div class="meses">${etiquetas(haySel ? sel : null)}</div>`;
 
-  $(id).querySelectorAll('.columnas button').forEach(btn =>
-    btn.addEventListener('click', () => {
-      const i = Number(btn.dataset.i);
+  const capa = $(id).querySelector('.seleccion');
+  const meses = $(id).querySelector('.meses');
+  let mostrado = haySel ? sel : null;
+  const mostrar = i => {
+    if (i === mostrado) return;
+    mostrado = i;
+    capa.innerHTML = capaSeleccion(i);
+    meses.innerHTML = etiquetas(i);
+  };
+
+  $(id).querySelectorAll('.columnas button').forEach(btn => {
+    const i = Number(btn.dataset.i);
+    btn.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse') mostrar(i); });
+    btn.addEventListener('click', e => {
       estado.sel[id] = estado.sel[id] === i ? null : i;
-      pintar();
-    }));
+      // Con mouse, al deseleccionar sigue el hover; con el dedo se oculta.
+      mostrar(estado.sel[id] ?? (e.pointerType === 'mouse' ? i : null));
+    });
+  });
+  // Al salir del gráfico vuelve al mes fijado con clic (o a nada).
+  $(id).querySelector('.columnas').addEventListener('pointerleave', e => {
+    if (e.pointerType === 'mouse') mostrar(estado.sel[id]);
+  });
 }
 
 // Sin datos todavía: bloques grises en lugar de ejes en 0 y líneas planas

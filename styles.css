@@ -888,6 +888,8 @@ select option { background: #1a1a22; color: var(--text); }
   overflow: visible; pointer-events: none;
 }
 
+.grafico .seleccion { pointer-events: none; }
+
 .grafico .guia { position: absolute; top: 0; bottom: 0; border-left: 1px dashed rgba(255,255,255,0.25); pointer-events: none; }
 
 .grafico .punto {
