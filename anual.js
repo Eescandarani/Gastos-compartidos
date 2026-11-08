@@ -169,17 +169,62 @@ function grafico(id, ps, series) {
     meses.innerHTML = etiquetas(i);
   };
 
-  $(id).querySelectorAll('.columnas button').forEach(btn => {
+  const columnas = $(id).querySelector('.columnas');
+
+  // Scrubbing táctil: con el dedo apoyado, el detalle sigue al mes que queda
+  // debajo. Un toque sin arrastrar fija o suelta el mes, como antes. Si el
+  // gesto es vertical, el navegador scrollea la página (touch-action: pan-y)
+  // y avisa con pointercancel.
+  const indiceEn = clientX => {
+    const r = columnas.getBoundingClientRect();
+    return Math.min(N - 1, Math.max(0, Math.floor((clientX - r.left) / r.width * N)));
+  };
+  let toque = null;          // { id, inicio, ultimo, movio } mientras hay un dedo apoyado
+  let ignorarClick = false;  // el toque ya se resolvió con pointer events
+
+  columnas.addEventListener('pointerdown', e => {
+    if (e.pointerType === 'mouse' || toque) return;
+    const i = indiceEn(e.clientX);
+    toque = { id: e.pointerId, inicio: i, ultimo: i, movio: false };
+    try { columnas.setPointerCapture(e.pointerId); } catch {}
+    mostrar(i);
+  });
+  columnas.addEventListener('pointermove', e => {
+    if (!toque || e.pointerId !== toque.id) return;
+    const i = indiceEn(e.clientX);
+    if (i !== toque.inicio) toque.movio = true;
+    toque.ultimo = i;
+    mostrar(i);
+  });
+  columnas.addEventListener('pointerup', e => {
+    if (!toque || e.pointerId !== toque.id) return;
+    const { inicio, ultimo, movio } = toque;
+    toque = null;
+    ignorarClick = true;
+    setTimeout(() => { ignorarClick = false; }, 400);
+    // Tras arrastrar queda fijo el último mes; un toque simple alterna.
+    estado.sel[id] = movio ? ultimo : (estado.sel[id] === inicio ? null : inicio);
+    mostrar(estado.sel[id]);
+  });
+  columnas.addEventListener('pointercancel', e => {
+    if (!toque || e.pointerId !== toque.id) return;
+    toque = null;
+    mostrar(estado.sel[id]);
+  });
+
+  columnas.querySelectorAll('button').forEach(btn => {
     const i = Number(btn.dataset.i);
     btn.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse') mostrar(i); });
-    btn.addEventListener('click', e => {
+    // Clic con mouse o teclado (los toques ya se manejaron arriba).
+    btn.addEventListener('click', () => {
+      if (ignorarClick) { ignorarClick = false; return; }
       estado.sel[id] = estado.sel[id] === i ? null : i;
-      // Con mouse, al deseleccionar sigue el hover; con el dedo se oculta.
-      mostrar(estado.sel[id] ?? (e.pointerType === 'mouse' ? i : null));
+      // Con mouse, al deseleccionar sigue el hover.
+      mostrar(estado.sel[id] ?? i);
     });
   });
   // Al salir del gráfico vuelve al mes fijado con clic (o a nada).
-  $(id).querySelector('.columnas').addEventListener('pointerleave', e => {
+  columnas.addEventListener('pointerleave', e => {
     if (e.pointerType === 'mouse') mostrar(estado.sel[id]);
   });
 }
