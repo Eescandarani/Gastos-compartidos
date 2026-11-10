@@ -87,7 +87,8 @@ function pintar() {
     { label: PERSONA_A, color: COLOR_A, data: sA },
     { label: PERSONA_B, color: COLOR_B, data: sB },
   ]);
-  grafico('g2', ps, [{ label: 'Cuotas', color: COLOR_CUOTAS, data: sC }]);
+  grafico('g2', ps, [{ label: 'Cuotas', color: COLOR_CUOTAS, data: sC }],
+    { texto: 'Ver cuotas', hay: i => sC[i] > 0, abrir: i => abrirCuotasMes(ps[i]) });
   pintarVigentes();
 }
 
@@ -101,7 +102,8 @@ function escalon(max) {
   return (m <= 1 ? 1 : m <= 2 ? 2 : m <= 2.5 ? 2.5 : m <= 5 ? 5 : 10) * pow;
 }
 
-function grafico(id, ps, series) {
+// accion (opcional): botón dentro del tooltip para ver el detalle del mes.
+function grafico(id, ps, series, accion = null) {
   const N = ps.length;
   const max = Math.max(0, ...series.flatMap(s => s.data));
   const paso = escalon(max);
@@ -137,11 +139,12 @@ function grafico(id, ps, series) {
     return `
       <div class="guia" style="left:${left}%"></div>
       ${series.map(s => `<span class="punto" style="left:${left}%; top:${yPct(s.data[i])}%; background:${s.color}"></span>`).join('')}
-      <div class="tip" style="left:${left}%; transform:${shift}">
+      <div class="tip${accion ? ' activo' : ''}" style="left:${left}%; transform:${shift}">
         <span class="titulo">${ps[i].titulo}</span>
         ${series.map(s => `<span class="fila"><span class="color" style="background:${s.color}"></span>
           <span class="nombre">${escapeHtml(s.label)}</span><span class="valor">${plata(s.data[i])}</span></span>`).join('')}
         ${series.length > 1 ? `<span class="fila total"><span class="nombre">Total</span><span class="valor">${plata(total)}</span></span>` : ''}
+        ${accion && accion.hay(i) ? `<button type="button" class="tip-btn" data-ver="${i}">${escapeHtml(accion.texto)}</button>` : ''}
       </div>`;
   };
   const etiquetas = i => ps.map((p, j) =>
@@ -223,9 +226,15 @@ function grafico(id, ps, series) {
       mostrar(estado.sel[id] ?? i);
     });
   });
-  // Al salir del gráfico vuelve al mes fijado con clic (o a nada).
-  columnas.addEventListener('pointerleave', e => {
+  // Al salir del gráfico vuelve al mes fijado con clic (o a nada). Se escucha
+  // en el área (columnas + tooltip) para poder llevar el mouse al botón.
+  $(id).querySelector('.area').addEventListener('pointerleave', e => {
     if (e.pointerType === 'mouse') mostrar(estado.sel[id]);
+  });
+
+  if (accion) capa.addEventListener('click', e => {
+    const btn = e.target.closest('[data-ver]');
+    if (btn) accion.abrir(Number(btn.dataset.ver));
   });
 }
 
@@ -237,6 +246,29 @@ function pintarEsqueleto() {
   });
   $('a-vig-count').textContent = '0 compras';
   $('a-vigentes').innerHTML = filasEsqueleto(3);
+}
+
+const aQuien = g => igual(g.corresponde, PERSONA_A) ? PERSONA_A
+  : igual(g.corresponde, PERSONA_B) ? PERSONA_B : 'Los 2';
+
+// Todas las cuotas que caen en el mes, de la más cara a la más barata.
+function abrirCuotasMes(p) {
+  const lista = (estado.gastos || [])
+    .filter(g => g.tot > 1 && g.anio * 12 + g.mes - 1 === p.k)
+    .sort((x, y) => y.monto - x.monto);
+  const total = lista.reduce((acc, g) => acc + g.monto, 0);
+  abrirHoja(
+    encabezado(`Cuotas de ${p.titulo}`,
+      `${lista.length === 1 ? '1 cuota' : `${lista.length} cuotas`} · ${plata(total)}`) +
+    `<div class="hoja-cuerpo">${lista.length ? lista.map(g => `
+      <div class="cuota-row">
+        <div class="izq">
+          <span class="gasto-desc">${escapeHtml(g.base)}</span>
+          <span class="gasto-meta">Cuota ${g.nro} de ${g.tot} · Corresponde a ${escapeHtml(aQuien(g))}</span>
+        </div>
+        <div class="der"><span class="gasto-monto">${plata(g.monto)}</span></div>
+      </div>`).join('')
+      : '<div class="lista-vacia">No hay cuotas este mes.</div>'}</div>`);
 }
 
 // Compras en cuotas que todavía tienen alguna desde el mes actual en adelante.
@@ -261,8 +293,7 @@ function pintarVigentes() {
     const actual = l.find(g => g.anio * 12 + g.mes >= ahora);
     if (!actual) return null;
     const faltan = actual.tot - actual.nro;
-    const corr = igual(actual.corresponde, PERSONA_A) ? PERSONA_A
-      : igual(actual.corresponde, PERSONA_B) ? PERSONA_B : 'Los 2';
+    const corr = aQuien(actual);
     return {
       faltan,
       html: `

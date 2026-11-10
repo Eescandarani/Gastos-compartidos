@@ -259,31 +259,6 @@ const buscar = key => estado.gastos.find(g => g.key === key);
 
 /* ============ Hojas ============ */
 
-// Una hoja por vez (más la de confirmar, que va encima). Se cierra tocando
-// el fondo o el ✕.
-function abrirHoja(html, { clase = '', encima = false } = {}) {
-  const fondo = document.createElement('div');
-  fondo.className = 'hoja-fondo' + (encima ? ' encima' : '');
-  fondo.innerHTML = `<div class="hoja ${clase}">${html}</div>`;
-  fondo.addEventListener('click', e => { if (e.target === fondo) cerrarHoja(fondo); });
-  fondo.querySelectorAll('[data-cerrar]').forEach(b => b.addEventListener('click', () => cerrarHoja(fondo)));
-  $('hojas').appendChild(fondo);
-  return fondo;
-}
-
-function cerrarHoja(fondo) { fondo.remove(); }
-
-function encabezado(titulo, sub, extra = '') {
-  return `
-    <div class="hoja-header">
-      <div class="hoja-titulo">
-        <div class="titulo">${escapeHtml(titulo)}</div>
-        ${sub ? `<div class="sub">${escapeHtml(sub)}${extra}</div>` : ''}
-      </div>
-      <button type="button" class="cerrar-btn" data-cerrar aria-label="Cerrar">✕</button>
-    </div>`;
-}
-
 function abrirPersona(p) {
   if (!estado.gastos) return;
   estado.menuKey = null; pintarLista();
