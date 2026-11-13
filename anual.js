@@ -311,9 +311,18 @@ function pintarVigentes() {
     };
   }).filter(Boolean).sort((x, y) => y.faltan - x.faltan);
 
+  // Suma de todas las cuotas que caen en el mes actual.
+  const totalMes = estado.gastos
+    .filter(g => g.tot > 1 && g.anio * 12 + g.mes === ahora)
+    .reduce((acc, g) => acc + g.monto, 0);
+
   $('a-vig-count').textContent = vigentes.length === 1 ? '1 compra' : `${vigentes.length} compras`;
   cont.innerHTML = vigentes.length
-    ? vigentes.map(v => v.html).join('')
+    ? vigentes.map(v => v.html).join('') + `
+      <div class="total-row">
+        <span class="total-label">Total en cuotas de ${MESES[hoy.getMonth()].toLowerCase()}</span>
+        <span class="total-value">${plata(totalMes)}</span>
+      </div>`
     : '<div class="lista-vacia">No hay cuotas vigentes.</div>';
 }
 
